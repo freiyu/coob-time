@@ -1,6 +1,6 @@
 # CubeTime — Code Map
 <!-- Maintained by @context-keeper. Hard cap 200 lines. Facts only. Paths, not line numbers. -->
-Synced at: e4bc97c | Phase: 2 (Prototype, in progress)
+Synced at: 1eea7f5 | Phase: 2 (Prototype, in progress)
 
 ## 1. Quick facts
 - Stack: Next.js 16.4 App Router + Turbopack (cacheComponents, partialPrefetching), React 19.3, TypeScript strict, Tailwind CSS v4 via @tailwindcss/turbopack loader (tokens in src/app/globals.css, dark via `.dark` class), lucide-react icons, Geist fonts.
@@ -85,10 +85,13 @@ All rows: Node-side spike with cubing@0.65.1 `randomScrambleForEvent` produced v
 - Client vs server components: layout.tsx/page.tsx are server components; all interactive UI hangs off the `"use client"` root src/components/timer-app.tsx. Browser-only APIs (localStorage, matchMedia) stay behind that root.
 
 ## 9. Decisions and gotchas that affect code
-- Scramble library = cubing.js (spike passed Node-side in Phase 2; browser/worker verification is Phase 4 work).
-- At sync time the Phase 2 app is still uncommitted (src/, package.json, configs are untracked; speedcubing-timer-prd.md deleted) — HEAD e4bc97c does not contain the code.
+- Scramble library = cubing.js (spike passed Node-side in Phase 2; browser/worker verification is Phase 4 work). Sample scrambles in src/lib/sample-data.ts came from that spike (square-1 #2 was regenerated once after review found it truncated).
+- Phase 2 code committed at 1eea7f5 (src/, package.json, configs added; speedcubing-timer-prd.md deleted).
+- AGENTS.md is rewritten by `next dev` (nextjs-agent-rules block re-emitted); it once lost the CubeTime rules entirely — commit the file with your work, and restore both blocks if clobbered.
+- Dev env: Linux Node 22 via nvm; node/npm/npx shims in ~/.local/bin (outside repo) so bare npm resolves to Linux Node, not Windows npm from /mnt/c.
 - No test runner configured: `npm run test` / `test:e2e` scripts do not exist yet.
 - Timer is display-only; no keyboard handling yet (PRD Section 5.7 comes in Phase 4).
+- Theme state in timer-app.tsx uses useSyncExternalStore over localStorage with a custom `cubetime-theme-change` event (no setState-in-effect; satisfies react-hooks/set-state-in-effect).
 
 ## 10. Tech debt / TODO
 - stats helpers and sample data share one file (src/lib/sample-data.ts); split when src/lib/statistics and src/lib/storage arrive.

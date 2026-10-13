@@ -28,4 +28,16 @@ Only the human supplies scores, satisfaction, bug notes, and the decision. Nobod
 - Human decision: Approve / Revise / Reject
 
 ## Entries
-(none yet)
+
+### Phase 2 — Prototype — 2026-10-13
+- Agent summary: Visual prototype with sample data only — timer, scramble panel, puzzle selector, solve history, statistics, menu; no functional claims for timer/scramble/persistence. Reviews run before fixes; lint/typecheck/build re-run after fixes (all exit 0). `npm run test` missing script is expected (no test runner until later phases).
+- Commands / tests and observed results: `npm run lint` exit 0; `npm run typecheck` exit 0; `npm run build` exit 0 (static routes `/` and `/_not-found`); `npm run test` = missing script (expected). Tester run independently. Reviews NOT re-run after anti-slop fixes (mechanical, from reviewers' own recommendations).
+- Reviewer: no BLOCKER. SHOULD-FIX (a) footer promised backup export — FIXED (reworded); (b) "Press Space to start" inert command — DEFERRED (DESIGN.md idle copy kept; prototype banner states timer is not active; state gallery deferred to Phase 3/4). NICE-TO-HAVE: menu arrow-key nav deferred (Phase 3 a11y), settings control out of Phase 2 focus, DNF duplication FIXED, PB-on-single-solve FIXED (badge only when >1 solve).
+- Anti-slop: NEEDS WORK — all findings fixed: truncated square-1 scramble regenerated; SVG font sizes 10→16; notice/footer text-xs→text-sm (14px floor); menu trigger aria-label removed (label-in-name); Sample badge → info tokens; copy-failure inline hint with next step; menu item radius/padding on 8px/4px scale; DNF duplicate removed.
+- Known left-outs: settings dialog, solve-row actions menu, keyboard shortcuts, empty-state gallery, tabs (two-column layout instead), test scripts.
+- Open decisions for human (defaults used): UI English, name CubeTime, license undecided (cubing.js GPL-3.0 relevant if repo public).
+- Scores (applicable categories): (blank — human fills per PRD Section 15)
+- Satisfied / Not satisfied:
+- Bug notes and requested revisions:
+- Prompt used: PRD Section 14 Phase 2 prompt
+- Human decision: Approve / Revise / Reject

@@ -6,8 +6,8 @@ Section 14 wins.
 
 | Phase | Status | Approved tag | Last commit | Notes |
 |---|---|---|---|---|
-| 1 Validate and plan | Not started | — | — | |
-| 2 Prototype | Not started | — | — | |
+| 1 Validate and plan | Approved | — (verbal only, no tag created) | e4bc97c | Human said "oke sip lanjut prototype" |
+| 2 Prototype | Awaiting human check | — | 1eea7f5 | Visual prototype + sample data; lint/typecheck/build exit 0; not pushed |
 | 3 Frontend | Not started | — | — | |
 | 4 Timer and scramble engine | Not started | — | — | |
 | 5 Local persistence and portability | Not started | — | — | |
@@ -18,13 +18,14 @@ Section 14 wins.
 Status values: Not started · In progress · Awaiting human check · Approved · Revise · Rejected
 
 ## Decisions
-- (none yet)
+- Scramble library = cubing.js. Node-side spike with `randomScrambleForEvent` produced output for all 10 puzzles in PRD Section 4; browser/worker verification still due in Phase 4 (CODEMAP Section 5 matrix stays "unverified" until then).
+- UI language default = English (PRD does not specify; confirm or change).
+- Product name "CubeTime" is a working title (confirm or change).
 
 ## Open questions
-- Scramble library: which verified generator covers each of the 10 puzzles? Any gap needs a product decision (PRD Section 1 rule 7, Section 4).
-- UI language (the PRD does not say; English by default?)
-- Final product name (CubeTime is a working title)
-- Repository license
+- Repository license (cubing.js is GPL-3.0 — relevant if the repo is public).
+- Confirm defaults: UI language English, product name CubeTime.
+- Phase 2 was approved verbally for Phase 1 only; Phase 1 has no `phase-1-approved` tag — create one retroactively, or leave verbal-only?
 
 ## Known issues carried forward
 - (none yet)

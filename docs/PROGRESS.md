@@ -7,7 +7,7 @@ Section 14 wins.
 | Phase | Status | Approved tag | Last commit | Notes |
 |---|---|---|---|---|
 | 1 Validate and plan | Approved | — (verbal only, no tag created) | e4bc97c | Human said "oke sip lanjut prototype" |
-| 2 Prototype | Awaiting human check | — | 1eea7f5 | Visual prototype + sample data; lint/typecheck/build exit 0; not pushed |
+| 2 Prototype | Awaiting human check | — | db456d8 | Visual prototype + sample data + scramble-view addendum (3D TwistyPlayer, delta db456d8); lint/typecheck/build exit 0 after delta; browser WebGL render unverified — eyeball via `npm run dev`; not pushed |
 | 3 Frontend | Not started | — | — | |
 | 4 Timer and scramble engine | Not started | — | — | |
 | 5 Local persistence and portability | Not started | — | — | |

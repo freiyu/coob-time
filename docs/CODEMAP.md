@@ -1,6 +1,6 @@
 # CubeTime — Code Map
 <!-- Maintained by @context-keeper. Hard cap 200 lines. Facts only. Paths, not line numbers. -->
-Synced at: 93980bb | Phase: 2 (Prototype, in progress)
+Synced at: db456d8 | Phase: 2 (Prototype, in progress)
 
 ## 1. Quick facts
 - Stack: Next.js 16.4 App Router + Turbopack (cacheComponents, partialPrefetching), React 19.3, TypeScript strict, Tailwind CSS v4 via @tailwindcss/turbopack loader (tokens in src/app/globals.css, dark via `.dark` class), lucide-react icons, Geist fonts.
@@ -12,7 +12,7 @@ Synced at: 93980bb | Phase: 2 (Prototype, in progress)
 | Path | Responsibility |
 |---|---|
 | src/app | App Router shell: layout.tsx (fonts, metadata, pre-paint theme script), page.tsx (renders TimerApp), globals.css (Tailwind v4 tokens, `.dark` overrides), favicon |
-| src/components | Prototype UI: timer-app (client root: theme + puzzle/session/scramble state), top-bar, timer-card, scramble-panel, solve-history, statistics, menu |
+| src/components | Prototype UI: timer-app (client root: theme + puzzle/session/scramble state), top-bar, timer-card, scramble-panel, scramble-view (3D TwistyPlayer), solve-history, statistics, menu |
 | src/lib | Only sample-data.ts today: static prototype data + stats helpers. timer / scrambles / statistics / storage / backup folders not created yet |
 | docs | PRD_CUBETIME.md, DESIGN.md, PROGRESS.md, CODEMAP.md, REVIEW-LOG.md, PROMPTS.md, TESTING-PRD.md |
 | .opencode/agents | Subagent definitions (context-keeper, project-manager, reviewer, tester, …) |
@@ -23,6 +23,7 @@ Synced at: 93980bb | Phase: 2 (Prototype, in progress)
 |---|---|---|---|
 | Timer engine (performance.now) | src/lib/timer | 4 | none — timer-card.tsx is a static "0.00" placeholder |
 | Scramble adapter | src/lib/scrambles | 4 | none — static SAMPLE_SCRAMBLES cycled by index |
+| Scramble 3D view | src/components/scramble-view.tsx | 2 | prototype — TwistyPlayer renders existing scramble text |
 | Statistics and penalties | src/lib/statistics | 6 | prototype — helpers in src/lib/sample-data.ts |
 | Storage (IndexedDB, repositories, migrations) | src/lib/storage | 5 | none |
 | Backup (JSON, CSV) and import validation | src/lib/backup, src/lib/validation | 5 | none |
@@ -32,11 +33,11 @@ Synced at: 93980bb | Phase: 2 (Prototype, in progress)
 
 ## 4. Public interfaces (what other code may call; names and one-line purpose only)
 Only `src/lib/sample-data.ts` exports public helpers (UI components are default-exported internals, not interfaces yet).
-- Types: `Penalty` ("none" | "plus2" | "dnf"), `Puzzle`, `Solve`, `SessionSample`
+- Types: `Penalty` ("none" | "plus2" | "dnf"), `PuzzleId` (10-id string union), `Puzzle`, `Solve`, `SessionSample`
 - `PUZZLES` — the 10 supported puzzle ids/labels
-- `SAMPLE_SCRAMBLES` — static scramble strings per puzzle id (3 each), cubing@0.65.1 offline output
+- `SAMPLE_SCRAMBLES` — static scramble strings, exhaustive `Record<PuzzleId, string[]>` (3 each), cubing@0.65.1 offline output
 - `SAMPLE_SESSIONS` — two sample 3x3 sessions with solves
-- `sessionsForPuzzle(puzzleId)` — sessions for a puzzle, or an empty default session
+- `sessionsForPuzzle(puzzleId: PuzzleId)` — sessions for a puzzle, or an empty default session
 - `puzzleLabel(puzzleId)` — id → display label
 - `effectiveMs(solve)` — time in ms after +2/DNF penalty, null if DNF
 - `formatMs(ms)` — "12.34" or "1:05.12" rendering
@@ -48,6 +49,7 @@ Only `src/lib/sample-data.ts` exports public helpers (UI components are default-
 ## 5. Puzzle × scramble verification matrix (PRD Section 4)
 Status is "verified" only when a test or a phase report proves it. Otherwise "unverified" or "unsupported".
 All rows: Node-side spike with cubing@0.65.1 `randomScrambleForEvent` produced valid output during Phase 2 (used as the sample-data source); browser/worker verification still due in Phase 4.
+cubing/twisty TwistyPlayer renders these scrambles as 3D views in the prototype (visual, client-only); not yet evidence of browser-side scramble GENERATION.
 | Puzzle | Library function | Output style (WCA-style?) | Status | Notes |
 |---|---|---|---|---|
 | 2×2×2 | cubing@0.65.1 randomScrambleForEvent("222") | WCA-style | unverified | spike passed Node-side only |
@@ -72,6 +74,7 @@ All rows: Node-side spike with cubing@0.65.1 `randomScrambleForEvent` produced v
 | Name | Path | Purpose |
 |---|---|---|
 | Menu | src/components/menu.tsx | Dropdown primitive: aria menu roles, Escape/outside-click close, active check, align left/right |
+| ScrambleView | src/components/scramble-view.tsx | 3D TwistyPlayer for a puzzle+scramble; dynamic-import-in-useEffect, text scramble stays authoritative on failure |
 | Theme handling | src/components/timer-app.tsx + src/app/layout.tsx | localStorage `cubetime-theme` + useSyncExternalStore; inline pre-paint script avoids flash |
 | Design tokens | src/app/globals.css (spec: docs/DESIGN.md) | CSS vars for color roles + chart series; Tailwind `@theme inline` mapping; `.dark` overrides |
 | Stats helpers | src/lib/sample-data.ts | effectiveMs, formatMs, bestSingle, mean, aoN, bestAoN — reuse instead of re-implementing |
@@ -83,15 +86,17 @@ All rows: Node-side spike with cubing@0.65.1 `randomScrambleForEvent` produced v
 - Add a statistic (and its test): helper in the stats module + render in src/components/statistics.tsx; unit test once vitest lands (not configured yet).
 - Add a storage migration: n/a until Phase 5 (src/lib/storage).
 - Client vs server components: layout.tsx/page.tsx are server components; all interactive UI hangs off the `"use client"` root src/components/timer-app.tsx. Browser-only APIs (localStorage, matchMedia) stay behind that root.
+- Heavy client lib (SSR-safe): `await import(...)` inside useEffect with a cancelled flag + cleanup — the pattern in src/components/scramble-view.tsx.
 
 ## 9. Decisions and gotchas that affect code
-- Scramble library = cubing.js (spike passed Node-side in Phase 2; browser/worker verification is Phase 4 work). Sample scrambles in src/lib/sample-data.ts came from that spike (square-1 #2 was regenerated once after review found it truncated).
+- Scramble library = cubing.js (runtime dependency since db456d8; spike passed Node-side in Phase 2; browser/worker verification is Phase 4 work). Sample scrambles in src/lib/sample-data.ts came from that spike (square-1 #2 was regenerated once after review found it truncated).
 - Phase 2 code committed at 1eea7f5 (src/, package.json, configs added; speedcubing-timer-prd.md deleted).
 - AGENTS.md is rewritten by `next dev` (nextjs-agent-rules block re-emitted); it once lost the CubeTime rules entirely — commit the file with your work, and restore both blocks if clobbered.
 - Dev env: Linux Node 22 via nvm; node/npm/npx shims in ~/.local/bin (outside repo) so bare npm resolves to Linux Node, not Windows npm from /mnt/c.
 - No test runner configured: `npm run test` / `test:e2e` scripts do not exist yet.
 - Timer is display-only; no keyboard handling yet (PRD Section 5.7 comes in Phase 4).
 - Theme state in timer-app.tsx uses useSyncExternalStore over localStorage with a custom `cubetime-theme-change` event (no setState-in-effect; satisfies react-hooks/set-state-in-effect).
+- opencode.json testsprite flags are enabled (flipped in db456d8, origin unknown, committed as-is) — relevant only to later testsprite-runner phases.
 
 ## 10. Tech debt / TODO
 - stats helpers and sample data share one file (src/lib/sample-data.ts); split when src/lib/statistics and src/lib/storage arrive.

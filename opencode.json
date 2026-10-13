@@ -8,12 +8,12 @@
       "environment": {
         "API_KEY": "{env:TESTSPRITE_API_KEY}"
       },
-      "enabled": false,
+      "enabled": true,
       "timeout": 30000
     }
   },
   "tools": {
-    "testsprite*": false
+    "testsprite*": true
   },
   "agent": {
     "build": {

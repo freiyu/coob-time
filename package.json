@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "cubing": "^0.65.1",
     "lucide-react": "^1.56.0",
     "next": "16.4.0",
     "react": "19.3.0",

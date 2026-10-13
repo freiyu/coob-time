@@ -2,7 +2,7 @@
 
 import { Box, Monitor, Moon, Sun } from "lucide-react";
 import Menu, { type MenuItem } from "@/components/menu";
-import { PUZZLES, type Puzzle } from "@/lib/sample-data";
+import { PUZZLES, type Puzzle, type PuzzleId } from "@/lib/sample-data";
 
 export type ThemeChoice = "dark" | "light" | "system";
 
@@ -13,8 +13,8 @@ interface SessionOption {
 }
 
 interface TopBarProps {
-  puzzleId: string;
-  onPuzzleChange: (puzzleId: string) => void;
+  puzzleId: PuzzleId;
+  onPuzzleChange: (puzzleId: PuzzleId) => void;
   sessions: SessionOption[];
   sessionId: string;
   onSessionChange: (sessionId: string) => void;

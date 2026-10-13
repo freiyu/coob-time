@@ -1,7 +1,19 @@
 export type Penalty = "none" | "plus2" | "dnf";
 
+export type PuzzleId =
+  | "2x2"
+  | "3x3"
+  | "4x4"
+  | "5x5"
+  | "6x6"
+  | "7x7"
+  | "megaminx"
+  | "square-1"
+  | "pyraminx"
+  | "skewb";
+
 export interface Puzzle {
-  id: string;
+  id: PuzzleId;
   label: string;
 }
 
@@ -17,7 +29,7 @@ export interface Solve {
 export interface SessionSample {
   id: string;
   name: string;
-  puzzleId: string;
+  puzzleId: PuzzleId;
   solves: Solve[];
 }
 
@@ -36,7 +48,7 @@ export const PUZZLES: Puzzle[] = [
 
 // Sample scrambles generated offline with cubing@0.65.1 (randomScrambleForEvent).
 // They are static sample data here — the app does not generate scrambles yet.
-export const SAMPLE_SCRAMBLES: Record<string, string[]> = {
+export const SAMPLE_SCRAMBLES: Record<PuzzleId, string[]> = {
   "2x2": [
     "R2 U' R2 F2 U F' R U2 F' L' U'",
     "U' F2 R U2 L' F L F2 U' F U'",
@@ -145,7 +157,7 @@ export const SAMPLE_SESSIONS: SessionSample[] = [
   },
 ];
 
-export function sessionsForPuzzle(puzzleId: string): SessionSample[] {
+export function sessionsForPuzzle(puzzleId: PuzzleId): SessionSample[] {
   const sessions = SAMPLE_SESSIONS.filter((s) => s.puzzleId === puzzleId);
   if (sessions.length > 0) return sessions;
   return [{ id: `${puzzleId}-default`, name: "Default session", puzzleId, solves: [] }];

@@ -2,14 +2,18 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Check, Copy, RefreshCw } from "lucide-react";
+import ScrambleView from "@/components/scramble-view";
+import type { PuzzleId } from "@/lib/sample-data";
 
 interface ScramblePanelProps {
+  puzzleId: PuzzleId;
   puzzleLabel: string;
   scramble: string;
   onNewScramble: () => void;
 }
 
 export default function ScramblePanel({
+  puzzleId,
   puzzleLabel,
   scramble,
   onNewScramble,
@@ -77,6 +81,7 @@ export default function ScramblePanel({
       <p className="mt-4 font-mono text-base leading-relaxed break-words whitespace-pre-wrap text-foreground sm:text-lg">
         {scramble}
       </p>
+      <ScrambleView puzzleId={puzzleId} scramble={scramble} />
       {copyState === "failed" && (
         <p className="mt-2 text-sm text-danger-foreground">
           Could not copy — select the scramble text and copy it manually.

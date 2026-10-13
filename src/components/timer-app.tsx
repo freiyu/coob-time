@@ -11,6 +11,7 @@ import {
   bestSingle,
   puzzleLabel,
   sessionsForPuzzle,
+  type PuzzleId,
 } from "@/lib/sample-data";
 
 const THEME_KEY = "cubetime-theme";
@@ -47,7 +48,7 @@ function writeTheme(choice: ThemeChoice) {
 }
 
 export default function TimerApp() {
-  const [puzzleId, setPuzzleId] = useState("3x3");
+  const [puzzleId, setPuzzleId] = useState<PuzzleId>("3x3");
   const [sessionId, setSessionId] = useState("default");
   const [scrambleIndex, setScrambleIndex] = useState(0);
   const theme = useSyncExternalStore<ThemeChoice>(
@@ -75,7 +76,7 @@ export default function TimerApp() {
     return () => media.removeEventListener("change", apply);
   }, [theme]);
 
-  const handlePuzzleChange = (nextPuzzleId: string) => {
+  const handlePuzzleChange = (nextPuzzleId: PuzzleId) => {
     const nextSessions = sessionsForPuzzle(nextPuzzleId);
     setPuzzleId(nextPuzzleId);
     setSessionId(nextSessions[0].id);
@@ -119,6 +120,7 @@ export default function TimerApp() {
       <main className="mx-auto w-full max-w-6xl flex-1 space-y-4 px-4 py-6 sm:space-y-6 sm:px-6">
         <TimerCard />
         <ScramblePanel
+          puzzleId={puzzleId}
           puzzleLabel={puzzleLabel(puzzleId)}
           scramble={scramble}
           onNewScramble={() => setScrambleIndex((index) => index + 1)}

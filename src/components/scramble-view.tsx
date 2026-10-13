@@ -1,24 +1,25 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import type { PuzzleID } from "cubing/twisty";
-import type { Puzzle } from "@/lib/sample-data";
+import type { ScrambleDisplay as ScrambleDisplayElement } from "scramble-display";
+import type { PuzzleId } from "@/lib/sample-data";
 
-const PUZZLE_IDS: Record<Puzzle["id"], PuzzleID> = {
-  "2x2": "2x2x2",
-  "3x3": "3x3x3",
-  "4x4": "4x4x4",
-  "5x5": "5x5x5",
-  "6x6": "6x6x6",
-  "7x7": "7x7x7",
-  megaminx: "megaminx",
-  "square-1": "square1",
-  pyraminx: "pyraminx",
+// WCA event IDs accepted by <scramble-display> (same ids as the Phase 2 spike).
+const EVENT_IDS: Record<PuzzleId, string> = {
+  "2x2": "222",
+  "3x3": "333",
+  "4x4": "444",
+  "5x5": "555",
+  "6x6": "666",
+  "7x7": "777",
+  megaminx: "minx",
+  "square-1": "sq1",
+  pyraminx: "pyram",
   skewb: "skewb",
 };
 
 interface ScrambleViewProps {
-  puzzleId: Puzzle["id"];
+  puzzleId: PuzzleId;
   scramble: string;
 }
 
@@ -29,24 +30,19 @@ export default function ScrambleView({ puzzleId, scramble }: ScrambleViewProps) 
     const container = containerRef.current;
     if (!container) return;
     let cancelled = false;
-    let player: HTMLElement | undefined;
+    let display: ScrambleDisplayElement | undefined;
 
     (async () => {
       try {
-        const { TwistyPlayer } = await import("cubing/twisty");
+        const { ScrambleDisplay } = await import("scramble-display");
         if (cancelled || !containerRef.current) return;
-        player = new TwistyPlayer({
-          alg: scramble,
-          puzzle: PUZZLE_IDS[puzzleId],
-          visualization: "3D",
-          background: "none",
-          controlPanel: "none",
-          viewerLink: "none",
-        });
-        player.style.width = "100%";
-        player.style.height = "100%";
-        player.style.display = "block";
-        containerRef.current.appendChild(player);
+        display = new ScrambleDisplay();
+        display.event = EVENT_IDS[puzzleId];
+        display.scramble = scramble;
+        display.style.width = "100%";
+        display.style.height = "100%";
+        display.style.display = "block";
+        containerRef.current.appendChild(display);
       } catch {
         // The scramble text above stays visible and authoritative.
       }
@@ -54,7 +50,7 @@ export default function ScrambleView({ puzzleId, scramble }: ScrambleViewProps) 
 
     return () => {
       cancelled = true;
-      player?.remove();
+      display?.remove();
     };
   }, [puzzleId, scramble]);
 

@@ -1,6 +1,6 @@
 # CubeTime — Code Map
 <!-- Maintained by @context-keeper. Hard cap 200 lines. Facts only. Paths, not line numbers. -->
-Synced at: 1eea7f5 | Phase: 2 (Prototype, in progress)
+Synced at: 93980bb | Phase: 2 (Prototype, in progress)
 
 ## 1. Quick facts
 - Stack: Next.js 16.4 App Router + Turbopack (cacheComponents, partialPrefetching), React 19.3, TypeScript strict, Tailwind CSS v4 via @tailwindcss/turbopack loader (tokens in src/app/globals.css, dark via `.dark` class), lucide-react icons, Geist fonts.

@@ -8,6 +8,7 @@ import TimerCard from "@/components/timer-card";
 import TopBar, { type ThemeChoice } from "@/components/top-bar";
 import {
   SAMPLE_SCRAMBLES,
+  aoN,
   bestSingle,
   puzzleLabel,
   sessionsForPuzzle,
@@ -95,6 +96,7 @@ export default function TimerApp() {
       : "No sample scramble for this puzzle.";
   const solves = session.solves;
   const pbMs = bestSingle(solves);
+  const ao5 = aoN(solves, 5);
 
   return (
     <>
@@ -118,13 +120,15 @@ export default function TimerApp() {
         </p>
       </div>
       <main className="mx-auto w-full max-w-6xl flex-1 space-y-4 px-4 py-6 sm:space-y-6 sm:px-6">
-        <TimerCard />
-        <ScramblePanel
-          puzzleId={puzzleId}
-          puzzleLabel={puzzleLabel(puzzleId)}
-          scramble={scramble}
-          onNewScramble={() => setScrambleIndex((index) => index + 1)}
-        />
+        <div className="grid gap-4 lg:grid-cols-2 sm:gap-6">
+          <TimerCard ao5={ao5} />
+          <ScramblePanel
+            puzzleId={puzzleId}
+            puzzleLabel={puzzleLabel(puzzleId)}
+            scramble={scramble}
+            onNewScramble={() => setScrambleIndex((index) => index + 1)}
+          />
+        </div>
         <div className="grid items-start gap-4 lg:grid-cols-2 sm:gap-6">
           <SolveHistory
             solves={solves}

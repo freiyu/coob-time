@@ -58,7 +58,7 @@ export default function ScrambleView({ puzzleId, scramble }: ScrambleViewProps) 
     <div
       ref={containerRef}
       aria-hidden
-      className="mt-4 h-56 w-full sm:h-72"
+      className="mt-4 h-44 w-full sm:h-52"
     />
   );
 }

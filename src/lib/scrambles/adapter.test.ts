@@ -1,4 +1,5 @@
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
+import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { describe, expect, it } from "vitest";
 import { PUZZLES } from "@/lib/puzzles";
@@ -15,6 +16,33 @@ describe("public/cubing browser copy", () => {
     };
     const alg = await mod.randomScrambleForEvent("333");
     expect(alg.toString().length).toBeGreaterThan(0);
+  });
+
+  it("has no bare import specifiers (browsers can't resolve them)", () => {
+    // three/* is only referenced by the 3D/Bluetooth chunks CubeTime never loads.
+    const bare: string[] = [];
+    const walk = (dir: string) => {
+      for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        const p = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          walk(p);
+        } else if (entry.name.endsWith(".js")) {
+          const code = readFileSync(p, "utf8")
+            .replace(/\/\/[^\n]*/g, "")
+            .replace(/\/\*[\s\S]*?\*\//g, "");
+          for (const m of code.matchAll(
+            /(?:from\s+|import\s*\(\s*|import\s+)["']([^"']+)["']/g,
+          )) {
+            const spec = m[1];
+            if (!spec.startsWith(".") && !spec.startsWith("/") && !spec.startsWith("three/")) {
+              bare.push(`${p} -> ${spec}`);
+            }
+          }
+        }
+      }
+    };
+    walk("public/cubing");
+    expect(bare, "run: node scripts/copy-cubing.mjs").toEqual([]);
   });
 });
 

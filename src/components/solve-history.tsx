@@ -33,8 +33,8 @@ export default function SolveHistory({
         <div className="px-4 py-10 text-center sm:px-6">
           <p className="text-sm font-medium">No solves yet</p>
           <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
-            Stop the timer to record your first solve. Data lives only in this
-            browser.
+            Stop the timer to record your first solve. Nothing is synced, and
+            saving to this browser arrives in a later phase.
           </p>
         </div>
       ) : (

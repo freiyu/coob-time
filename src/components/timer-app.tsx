@@ -13,7 +13,9 @@ import { aoN, bestSingle } from "@/lib/statistics";
 import type { Penalty, SolveRecord } from "@/lib/storage/types";
 import { useTimer } from "@/lib/timer/use-timer";
 
-const HOLD_TO_READY = false; // becomes a settings toggle in Phase 5
+// ponytail: hold-to-ready phases (holding/ready) are engine-tested scaffolding;
+// unreachable in the UI until the Phase 5 settings toggle turns this on.
+const HOLD_TO_READY = false;
 
 const THEME_KEY = "cubetime-theme";
 const THEME_EVENT = "cubetime-theme-change";
@@ -219,15 +221,14 @@ export default function TimerApp() {
   const { phase } = timer;
 
   const handlePuzzleChange = (nextPuzzleId: PuzzleId) => {
-    setScrambleState((state) => ({
-      status: "generating",
-      scramble: state.scramble,
-    }));
+    if (phase !== "idle" && phase !== "stopped") return;
+    setScrambleState({ status: "generating", scramble: "" });
     setPuzzleId(nextPuzzleId);
     setSessionId(defaultSessionId(nextPuzzleId));
   };
 
   const handleSessionChange = (nextSessionId: string) => {
+    if (phase !== "idle" && phase !== "stopped") return;
     setSessionId(nextSessionId);
   };
 
@@ -248,6 +249,7 @@ export default function TimerApp() {
         onSessionChange={handleSessionChange}
         theme={theme}
         onThemeChange={writeTheme}
+        selectionLocked={phase !== "idle" && phase !== "stopped"}
       />
       <div className="border-b border-border bg-muted">
         <p className="mx-auto max-w-6xl px-4 py-2 text-sm text-muted-foreground sm:px-6">
@@ -262,6 +264,7 @@ export default function TimerApp() {
             phase={phase}
             ao5={ao5}
             pendingSolve={pendingSolve}
+            scrambleReady={scrambleState.status === "ready"}
             onToggle={timer.toggle}
             onSetPenalty={handleSetPenalty}
           />
@@ -289,11 +292,11 @@ export default function TimerApp() {
       <footer className="border-t border-border px-4 py-4 sm:px-6">
         <p className="mx-auto max-w-6xl text-sm text-muted-foreground">
           Shortcuts: Space start/stop · N new scramble · D toggle DNF on the
-          last solve · Esc cancel ready state.
+          last solve.
         </p>
         <p className="mx-auto mt-1 max-w-6xl text-sm text-muted-foreground">
-          Data is stored only in this browser — it is never synced. Clearing
-          site data removes it.
+          Solves are kept in memory only until local saving ships. Nothing is
+          synced.
         </p>
       </footer>
     </>

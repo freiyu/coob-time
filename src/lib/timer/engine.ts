@@ -66,6 +66,7 @@ export function createTimerEngine(
       if (phase !== "idle" && phase !== "stopped") return;
       clearReadyTimer();
       holdStartTs = now();
+      lastElapsed = 0;
       setPhase("holding");
       readyTimer = setTimeout(() => {
         readyTimer = null;

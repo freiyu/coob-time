@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createTimerEngine } from "./engine";
-import { isTypingTarget } from "./keyboard";
+import { isInsideMenu, isTypingTarget } from "./keyboard";
 import type { TimerPhase } from "./types";
 
 interface UseTimerOptions {
@@ -46,6 +46,7 @@ export function useTimer(options: UseTimerOptions) {
       if (event.repeat) return;
       if (event.metaKey || event.ctrlKey || event.altKey) return;
       if (isTypingTarget(event.target)) return;
+      if (isInsideMenu(event.target)) return;
 
       if (event.code === "Space") {
         event.preventDefault();

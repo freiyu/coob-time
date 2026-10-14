@@ -10,6 +10,7 @@ interface TimerCardProps {
   phase: TimerPhase;
   ao5: number | null;
   pendingSolve: SolveRecord | null;
+  scrambleReady: boolean;
   onToggle: () => void;
   onSetPenalty: (penalty: Penalty) => void;
 }
@@ -29,6 +30,7 @@ export default function TimerCard({
   phase,
   ao5,
   pendingSolve,
+  scrambleReady,
   onToggle,
   onSetPenalty,
 }: TimerCardProps) {
@@ -56,8 +58,14 @@ export default function TimerCard({
     digits = formatMs(elapsed);
   }
 
-  const label = STATE_LABEL[phase];
+  const label =
+    phase === "idle" && !scrambleReady ? "Waiting for scramble…" : STATE_LABEL[phase];
   const showPenalties = phase === "stopped" && pendingSolve !== null;
+  const penaltyNote =
+    phase === "stopped" && pendingSolve && pendingSolve.penalty !== "none"
+      ? ` ${pendingSolve.penalty === "plus2" ? "+2 applied" : "DNF applied"}`
+      : "";
+  const toggleDisabled = phase !== "running" && !scrambleReady;
 
   return (
     <section aria-label="Timer">
@@ -65,14 +73,14 @@ export default function TimerCard({
         <button
           type="button"
           onClick={onToggle}
-          className="flex w-full flex-col items-center justify-center gap-4 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          aria-label={phase === "running" ? "Stop timer" : "Start timer"}
+          disabled={toggleDisabled}
+          className="flex w-full flex-col items-center justify-center gap-4 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default"
         >
           <span className="text-[clamp(3.5rem,14vw,9rem)] leading-none font-bold tabular-nums text-foreground">
             {digits}
           </span>
           <span className="text-sm font-medium text-muted-foreground">
-            {phase === "idle" ? (
+            {phase === "idle" && scrambleReady ? (
               <>
                 <span className="hidden [@media(hover:hover)]:inline">
                   Press Space to start
@@ -130,7 +138,7 @@ export default function TimerCard({
         </div>
       </div>
       <p aria-live="polite" className="sr-only">
-        {label}
+        {label + penaltyNote}
       </p>
     </section>
   );

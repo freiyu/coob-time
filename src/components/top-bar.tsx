@@ -20,6 +20,7 @@ interface TopBarProps {
   onSessionChange: (sessionId: string) => void;
   theme: ThemeChoice;
   onThemeChange: (theme: ThemeChoice) => void;
+  selectionLocked: boolean;
 }
 
 const themeOptions: { value: ThemeChoice; label: string; icon: React.ReactNode }[] = [
@@ -36,16 +37,19 @@ export default function TopBar({
   onSessionChange,
   theme,
   onThemeChange,
+  selectionLocked,
 }: TopBarProps) {
   const puzzleItems: MenuItem[] = PUZZLES.map((puzzle: Puzzle) => ({
     label: puzzle.label,
     value: puzzle.id,
+    disabled: selectionLocked && puzzle.id !== puzzleId,
     onSelect: () => onPuzzleChange(puzzle.id),
   }));
 
   const sessionItems: MenuItem[] = sessions.map((session) => ({
     label: `${session.name} (${session.count})`,
     value: session.id,
+    disabled: selectionLocked && session.id !== sessionId,
     onSelect: () => onSessionChange(session.id),
   }));
 

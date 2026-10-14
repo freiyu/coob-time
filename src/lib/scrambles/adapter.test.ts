@@ -4,7 +4,7 @@ import { cubingScrambleProvider } from "./adapter";
 
 describe("cubingScrambleProvider", () => {
   it(
-    "produces a non-empty WCA-style scramble for every supported puzzle",
+    "produces a non-empty scramble for every supported puzzle",
     { timeout: 120_000 },
     async () => {
       for (const puzzle of PUZZLES) {

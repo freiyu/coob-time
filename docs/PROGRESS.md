@@ -8,7 +8,7 @@ Section 14 wins.
 |---|---|---|---|---|
 | 1 Validate and plan | Approved | — (verbal only, no tag created) | e4bc97c | Human said "oke sip lanjut prototype" |
 | 2 Prototype | Approved | phase-2-approved (22a9cb2) | 22a9cb2 | Human approved 2026-10-14: "oke sip, lanjut bikinfrontend". Tag covers commits through 22a9cb2 incl. scramble-display swap (46832f2) + layout tweak (b6aa1fc, 22a9cb2) landed after audit. Branch ahead 8, not pushed |
-| 3 Frontend | Not started | — | — | |
+| 3 Frontend | Awaiting human check | — | 642642d | Committed 642642d: menu keyboard/roving focus, sole h1, visible scramble-failure state with retry, 14px text floor, type ports (timer/scrambles/storage). tester ×2 lint/typecheck/build pass; reviewer APPROVE WITH FINDINGS (all fixed); anti-slop NEEDS WORK (all fixed, one override: type ports kept per PRD Phase 3). Branch ahead 11, not pushed |
 | 4 Timer and scramble engine | Not started | — | — | |
 | 5 Local persistence and portability | Not started | — | — | |
 | 6 Statistics and integration | Not started | — | — | |

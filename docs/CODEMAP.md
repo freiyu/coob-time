@@ -1,6 +1,6 @@
 # CubeTime — Code Map
 <!-- Maintained by @context-keeper. Hard cap 200 lines. Facts only. Paths, not line numbers. -->
-Synced at: be20718 | Phase: 2 approved (tag phase-2-approved @ 22a9cb2); Phase 3 not started
+Synced at: 642642d | Phase: 3 committed @ 642642d, awaiting human approval
 
 ## 1. Quick facts
 - Stack: Next.js 16.4 App Router + Turbopack (cacheComponents, partialPrefetching), React 19.3, TypeScript strict, Tailwind CSS v4 via @tailwindcss/turbopack loader (tokens in src/app/globals.css, dark via `.dark` class), lucide-react icons, Geist fonts.
@@ -12,8 +12,8 @@ Synced at: be20718 | Phase: 2 approved (tag phase-2-approved @ 22a9cb2); Phase 3
 | Path | Responsibility |
 |---|---|
 | src/app | App Router shell: layout.tsx (fonts, metadata, pre-paint theme script), page.tsx (renders TimerApp), globals.css (Tailwind v4 tokens, `.dark` overrides), favicon |
-| src/components | Prototype UI: timer-app (client root: theme + puzzle/session/scramble state; main = row1 grid lg:grid-cols-2 TimerCard+ScramblePanel, row2 SolveHistory+Statistics grid), top-bar, timer-card (takes `ao5: number \| null` prop, renders "Average of 5" row), scramble-panel, scramble-view (2D scramble-display, h-44/sm:h-52), solve-history, statistics, menu |
-| src/lib | Only sample-data.ts today: static prototype data + stats helpers. timer / scrambles / statistics / storage / backup folders not created yet |
+| src/components | Prototype UI: timer-app (client root: theme + puzzle/session/scramble state; main = row1 grid lg:grid-cols-2 TimerCard+ScramblePanel, row2 SolveHistory+Statistics grid), top-bar (brand = page `<h1>`), timer-card (takes `ao5: number \| null` prop, renders "Average of 5" row), scramble-panel, scramble-view (2D scramble-display, h-44/sm:h-52, visible load-failure fallback), solve-history, statistics, menu (full keyboard nav) |
+| src/lib | sample-data.ts (static prototype data + stats helpers); type-only ports: timer/types.ts, scrambles/types.ts, storage/types.ts (Phase 3). statistics / backup / validation folders not created yet |
 | docs | PRD_CUBETIME.md, DESIGN.md, PROGRESS.md, CODEMAP.md, REVIEW-LOG.md, PROMPTS.md, TESTING-PRD.md |
 | .opencode/agents | Subagent definitions (context-keeper, project-manager, reviewer, tester, …) |
 | Root configs | package.json, tsconfig (strict, `@/*` → src/*), next.config.ts, eslint.config.mjs, README.md |
@@ -21,18 +21,18 @@ Synced at: be20718 | Phase: 2 approved (tag phase-2-approved @ 22a9cb2); Phase 3
 ## 3. Modules and state (state: none / prototype / real)
 | Module | Location | Phase | State |
 |---|---|---|---|
-| Timer engine (performance.now) | src/lib/timer | 4 | none — timer-card.tsx is a static "0.00" placeholder |
-| Scramble adapter | src/lib/scrambles | 4 | none — static SAMPLE_SCRAMBLES cycled by index |
-| Scramble view (2D) | src/components/scramble-view.tsx | 2 | prototype — scramble-display renders existing scramble text |
+| Timer engine (performance.now) | src/lib/timer | 4 | interfaces (type ports) defined Phase 3 (`TimerPhase`, `TimerEngine` in src/lib/timer/types.ts, zero consumers yet); timer-card.tsx still a static "0.00" placeholder; implementation Phase 4 |
+| Scramble adapter | src/lib/scrambles | 4 | interfaces defined Phase 3 (`ScrambleResult`, `ScrambleProvider` in src/lib/scrambles/types.ts, zero consumers); still static SAMPLE_SCRAMBLES cycled by index; implementation Phase 4 |
+| Scramble view (2D) | src/components/scramble-view.tsx | 2 | prototype — scramble-display renders existing scramble text; on load failure: visible `role="status"` message + "Try again" (attempt counter retriggers effect); sr-only status placeholder always mounted |
 | Statistics and penalties | src/lib/statistics | 6 | prototype — helpers in src/lib/sample-data.ts |
-| Storage (IndexedDB, repositories, migrations) | src/lib/storage | 5 | none |
+| Storage (IndexedDB, repositories, migrations) | src/lib/storage | 5 | interfaces defined Phase 3 (`SolveRecord`/`SessionRecord`/`SettingsRecord` + `SolveRepository`/`SessionRepository` in src/lib/storage/types.ts, per PRD Section 7, zero consumers); implementation Phase 5 |
 | Backup (JSON, CSV) and import validation | src/lib/backup, src/lib/validation | 5 | none |
 | UI: timer, scramble, puzzle selector | src/components | 2-4 | prototype (sample data only) |
 | UI: sessions, history, statistics | src/components | 2-6 | prototype |
 | UI: settings, theme, backup | src/components | 2-5 | theme works (localStorage); backup UI none |
 
 ## 4. Public interfaces (what other code may call; names and one-line purpose only)
-Only `src/lib/sample-data.ts` exports public helpers (UI components are default-exported internals, not interfaces yet).
+Runtime helpers come only from `src/lib/sample-data.ts`; UI components are default-exported internals. Type ports (no implementations yet): `TimerPhase`/`TimerEngine` (src/lib/timer/types.ts), `ScrambleResult`/`ScrambleProvider` (src/lib/scrambles/types.ts), `SolveRecord`/`SessionRecord`/`SettingsRecord`/`SolveRepository`/`SessionRepository` (src/lib/storage/types.ts).
 - Types: `Penalty` ("none" | "plus2" | "dnf"), `PuzzleId` (10-id string union), `Puzzle`, `Solve`, `SessionSample`
 - `PUZZLES` — the 10 supported puzzle ids/labels
 - `SAMPLE_SCRAMBLES` — static scramble strings, exhaustive `Record<PuzzleId, string[]>` (3 each), cubing@0.65.1 offline output
@@ -64,7 +64,7 @@ The prototype view renders these scrambles with scramble-display@0.59.1 (cubing.
 | Skewb | …("skewb") | WCA-style | unverified | spike passed Node-side only |
 
 ## 6. Storage
-- Database name and schema version: none yet (no IndexedDB code)
+- Database name and schema version: none yet (no IndexedDB code); record shapes exist only as types in src/lib/storage/types.ts (Phase 5 implements)
 - Object stores and key fields (Solve, Session, Settings): none yet; prototype types mirror PRD Section 7 (Solve, SessionSample)
 - Migrations location and latest migration: none yet
 - Backup format version: none yet
@@ -73,7 +73,7 @@ The prototype view renders these scrambles with scramble-display@0.59.1 (cubing.
 ## 7. Reusable building blocks (check here BEFORE creating anything new)
 | Name | Path | Purpose |
 |---|---|---|
-| Menu | src/components/menu.tsx | Dropdown primitive: aria menu roles, Escape/outside-click close, active check, align left/right |
+| Menu | src/components/menu.tsx | Dropdown primitive: aria menu roles, Escape/outside-click close, active check, align left/right; roving tabindex (menuitems `tabIndex={-1}`), ArrowUp/Down/Home/End via `menuButtons()` helper, focus first item on open, focus back to trigger on select, closes when focus leaves root (`onBlur`) |
 | ScrambleView | src/components/scramble-view.tsx | scramble-display (`new ScrambleDisplay()`, `.event` from WCA id map + `.scramble`) for a puzzle+scramble; dynamic-import-in-useEffect with cancelled flag, aria-hidden container, try/catch — text scramble stays authoritative on failure |
 | Theme handling | src/components/timer-app.tsx + src/app/layout.tsx | localStorage `cubetime-theme` + useSyncExternalStore; inline pre-paint script avoids flash |
 | Design tokens | src/app/globals.css (spec: docs/DESIGN.md) | CSS vars for color roles + chart series; Tailwind `@theme inline` mapping; `.dark` overrides |
@@ -81,7 +81,7 @@ The prototype view renders these scrambles with scramble-display@0.59.1 (cubing.
 | Icons | lucide-react | Used everywhere; aria-hidden on decorative icons |
 
 ## 8. Conventions and recipes
-- Add a component: one file in src/components, default export, `"use client"` if it uses state/hooks; import via `@/components/...`; Tailwind classes only, colors from tokens (no raw hex).
+- Add a component: one file in src/components, default export, `"use client"` if it uses state/hooks; import via `@/components/...`; Tailwind classes only, colors from tokens (no raw hex); body/helper text never below `text-sm` (14px floor, DESIGN.md — `text-xs` removed from solve-history/statistics/scramble-panel in Phase 3).
 - Add a puzzle or scramble type (and how it is verified): extend `PUZZLES` + `SAMPLE_SCRAMBLES` in src/lib/sample-data.ts (prototype); real generation goes in src/lib/scrambles at Phase 4 and must be marked verified in Section 5 by a test or phase report.
 - Add a statistic (and its test): helper in the stats module + render in src/components/statistics.tsx; unit test once vitest lands (not configured yet).
 - Add a storage migration: n/a until Phase 5 (src/lib/storage).

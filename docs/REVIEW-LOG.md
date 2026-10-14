@@ -65,6 +65,6 @@ Only the human supplies scores, satisfaction, bug notes, and the decision. Nobod
 - Open decisions for human: defaults unchanged (UI English, name CubeTime, license undecided — cubing.js GPL-3.0-or-later; scramble-display also GPL-3.0-or-later).
 - Scores (applicable categories): (none given)
 - Satisfied / Not satisfied: (pending)
-- Bug notes and requested revisions: (pending)
+- Bug notes and requested revisions: Human check 1 (2026-10-14): "scramble generationnya fail". Root cause (systematic-debug, commit 40ef365): cubing.js runs its search in a module worker whose entry loads sibling chunks by relative path; bundling rewrites those paths (cubing#309/#327). Evidence in compiled dev chunks: strategy 1 lost `import.meta.resolve` (TypeError), strategy 3's emitted raw entry 404'd on `./chunk-*.js` inside the worker; adapter had also swallowed the real error message. Fix: postinstall `scripts/copy-cubing.mjs` copies dist → `public/cubing` (gitignored, eslint-ignored), adapter imports `/cubing/scramble/index.js` as native ESM via Function-import with package fallback (Node tests), panel now shows the underlying error text. Verified: new vitest loads the copy by file URL and generates (17/17), lint/typecheck/build pass, dev+prod HTTP serve entry/worker/siblings (200). NOT yet verified in a real browser (no browser in agent env) — human re-check pending.
 - Prompt used: PRD Section 14 Phase 4 prompt
 - Human decision: (pending)

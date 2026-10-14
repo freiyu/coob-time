@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { Award, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import Dialog from "@/components/dialog";
 import ScrambleView from "@/components/scramble-view";
 import { type PuzzleId } from "@/lib/puzzles";
 import type { Penalty, SolveRecord } from "@/lib/storage/types";
-import { aoN, effectiveMs, formatMs } from "@/lib/statistics";
+import { aoN, bestAoN, effectiveMs, formatMs } from "@/lib/statistics";
 
 interface SolveHistoryProps {
   solves: SolveRecord[];
@@ -95,6 +95,8 @@ export default function SolveHistory({
       ao12: index >= 11 ? aoN(solves.slice(0, index + 1), 12) : null,
     }))
     .reverse();
+  const best5 = solves.length >= 5 ? bestAoN(solves, 5) : null;
+  const best12 = solves.length >= 12 ? bestAoN(solves, 12) : null;
 
   const detail = rows.find((row) => row.solve.id === detailId) ?? null;
 
@@ -130,13 +132,13 @@ export default function SolveHistory({
                 </th>
                 <th
                   scope="col"
-                  className="border-r border-border bg-warning/40 px-3 py-2.5 text-right"
+                  className="border-r border-border px-3 py-2.5 text-right text-warning-foreground"
                 >
                   Ao5
                 </th>
                 <th
                   scope="col"
-                  className="border-r border-border bg-chart-1/10 px-3 py-2.5 text-right"
+                  className="border-r border-border px-3 py-2.5 text-right text-info-foreground"
                 >
                   Ao12
                 </th>
@@ -157,11 +159,14 @@ export default function SolveHistory({
             <tbody>
               {rows.map(({ solve, number, ao5, ao12 }) => {
                 const effective = effectiveMs(solve);
-                const isPb =
+                const isFastest =
                   solves.length > 1 &&
                   pbMs !== null &&
                   effective !== null &&
                   effective === pbMs;
+                const isBest5 = ao5 !== null && best5 !== null && ao5 === best5;
+                const isBest12 =
+                  ao12 !== null && best12 !== null && ao12 === best12;
                 return (
                   <tr
                     key={solve.id}
@@ -172,7 +177,9 @@ export default function SolveHistory({
                       <span className="text-muted-foreground">#{number} </span>
                       <button
                         type="button"
-                        className="rounded px-1 font-semibold tabular-nums hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        className={`rounded px-1 font-semibold tabular-nums hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                          isFastest ? "text-pb-foreground" : ""
+                        }`}
                       >
                         {effective === null ? (
                           <span className="text-muted-foreground">—</span>
@@ -181,7 +188,7 @@ export default function SolveHistory({
                         )}
                       </button>
                     </td>
-                    <td className="border-r border-border bg-warning/40 px-3 py-2.5 text-right tabular-nums">
+                    <td className="border-r border-border px-3 py-2.5 text-right tabular-nums">
                       {ao5 === null ? (
                         <span className="text-muted-foreground">—</span>
                       ) : (
@@ -196,13 +203,17 @@ export default function SolveHistory({
                               window: solves.slice(number - 5, number),
                             });
                           }}
-                          className="rounded px-1 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          className={`rounded px-1 font-medium hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                            isBest5
+                              ? "text-pb-foreground"
+                              : "text-warning-foreground"
+                          }`}
                         >
                           {formatMs(ao5)}
                         </button>
                       )}
                     </td>
-                    <td className="border-r border-border bg-chart-1/10 px-3 py-2.5 text-right tabular-nums">
+                    <td className="border-r border-border px-3 py-2.5 text-right tabular-nums">
                       {ao12 === null ? (
                         <span className="text-muted-foreground">—</span>
                       ) : (
@@ -217,7 +228,11 @@ export default function SolveHistory({
                               window: solves.slice(number - 12, number),
                             });
                           }}
-                          className="rounded px-1 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          className={`rounded px-1 font-medium hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                            isBest12
+                              ? "text-pb-foreground"
+                              : "text-info-foreground"
+                          }`}
                         >
                           {formatMs(ao12)}
                         </button>
@@ -228,12 +243,6 @@ export default function SolveHistory({
                       onClick={(event) => event.stopPropagation()}
                     >
                       <span className="inline-flex items-center gap-1">
-                        {isPb && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-brand-soft px-2 py-0.5 text-sm font-semibold text-brand-soft-foreground">
-                            <Award aria-hidden className="size-3" />
-                            PB
-                          </span>
-                        )}
                         {solve.penalty === "plus2" && (
                           <span className="rounded-full bg-warning px-2 py-0.5 text-sm font-semibold text-warning-foreground">
                             +2

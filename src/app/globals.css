@@ -33,6 +33,7 @@
   --warning-foreground: #8a4b06;
   --danger: #fde3e1;
   --danger-foreground: #a1261b;
+  --pb-foreground: #d92d20;
 
   --chart-1: #1b66d1;
   --chart-2: #12a06e;
@@ -72,6 +73,7 @@
   --warning-foreground: #f3cf8a;
   --danger: #3e1c1a;
   --danger-foreground: #f4a9a2;
+  --pb-foreground: #ff922b;
 
   --chart-1: #8db8ff;
   --chart-2: #86d9b5;
@@ -110,6 +112,7 @@
   --color-warning-foreground: var(--warning-foreground);
   --color-danger: var(--danger);
   --color-danger-foreground: var(--danger-foreground);
+  --color-pb-foreground: var(--pb-foreground);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);

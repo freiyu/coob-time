@@ -48,6 +48,7 @@ Large areas stay neutral. Do not flood pages with green or blue fills.
 | brand-strong | `#0B7D55` | Green text or icons on light surfaces (5.2:1) |
 | brand-soft / fg | `#DDF3E9` / `#0A5F42` | Saved / success badge |
 | warning bg / fg | `#FDF1D3` / `#8A4B06` | +2 |
+| pb-foreground | `#D92D20` | Fastest solve / average time text (light: red) |
 | danger bg / fg | `#FDE3E1` / `#A1261B` | DNF, errors |
 | destructive | `#B42318` | Destructive buttons, white text on it is 6.6:1 |
 | ring | `#1B66D1` | Focus ring, 2px with offset |
@@ -68,6 +69,7 @@ Large areas stay neutral. Do not flood pages with green or blue fills.
 | brand | `#86D9B5` | Pastel green, readable as text on dark (10:1) |
 | brand-soft / fg | `#153126` / `#A9EACD` | Saved / success badge |
 | warning bg / fg | `#3A2D12` / `#F3CF8A` | +2 |
+| pb-foreground | `#FF922B` | Fastest solve / average time text (dark: bright orange) |
 | danger bg / fg | `#3E1C1A` / `#F4A9A2` | DNF, errors |
 | destructive | `#F4A9A2` | Text on it is `#3A0F0C` (8.8:1) |
 | ring | `#8DB8FF` | Focus ring |

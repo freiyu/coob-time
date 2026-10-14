@@ -24,15 +24,15 @@ function StatCard({ label, value, sub, pb }: StatCardProps) {
   return (
     <div className="rounded-[14px] border border-border bg-card p-4">
       <p className="text-sm font-medium text-muted-foreground">{label}</p>
-      <p className="mt-1.5 flex items-center gap-2 text-xl font-semibold tabular-nums sm:text-2xl">
-        <span>{value}</span>
-        {pb && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-brand-soft px-2 py-0.5 text-sm font-semibold text-brand-soft-foreground">
-            <Award aria-hidden className="size-3" />
-            PB
-          </span>
-        )}
+      <p className="mt-1.5 text-xl font-semibold tabular-nums sm:text-2xl">
+        {value}
       </p>
+      {pb && (
+        <span className="mt-1.5 inline-flex w-fit items-center gap-1 rounded-full bg-brand-soft px-2 py-0.5 text-sm font-semibold text-brand-soft-foreground">
+          <Award aria-hidden className="size-3" />
+          PB
+        </span>
+      )}
       {sub && <p className="mt-1 text-sm text-muted-foreground">{sub}</p>}
     </div>
   );

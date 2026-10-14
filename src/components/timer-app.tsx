@@ -13,9 +13,9 @@ import { aoN, bestSingle } from "@/lib/statistics";
 import type { Penalty, SolveRecord } from "@/lib/storage/types";
 import { useTimer } from "@/lib/timer/use-timer";
 
-// ponytail: hold-to-ready phases (holding/ready) are engine-tested scaffolding;
-// unreachable in the UI until the Phase 5 settings toggle turns this on.
-const HOLD_TO_READY = false;
+// FR-T03: hold Space until ready, release starts the solve (tap still starts
+// immediately). Phase 5 settings toggle may make this configurable.
+const HOLD_TO_READY = true;
 
 const THEME_KEY = "cubetime-theme";
 const THEME_EVENT = "cubetime-theme-change";
@@ -213,6 +213,19 @@ export default function TimerApp() {
     generateFresh(puzzleId);
   };
 
+  const handleDeleteSolve = (id: string) => {
+    setSessions((prev) =>
+      prev.map((candidate) =>
+        candidate.id !== session.id
+          ? candidate
+          : {
+              ...candidate,
+              solves: candidate.solves.filter((solve) => solve.id !== id),
+            },
+      ),
+    );
+  };
+
   const timer = useTimer({
     holdToReady: HOLD_TO_READY,
     canStart: () => scrambleState.status === "ready",
@@ -239,21 +252,33 @@ export default function TimerApp() {
   const ao5 = aoN(solves, 5);
   const pbMs = bestSingle(solves);
 
+  // Running focus mode: everything except the timer fades out (300ms).
+  const focused = phase === "running";
+  const fadeCls = `transition-opacity duration-300 ease-out motion-reduce:transition-none ${
+    focused ? "pointer-events-none opacity-0" : "opacity-100"
+  }`;
+
   return (
     <>
-      <TopBar
-        puzzleId={puzzleId}
-        onPuzzleChange={handlePuzzleChange}
-        sessions={[
-          { id: session.id, name: session.name, count: solves.length },
-        ]}
-        sessionId={session.id}
-        onSessionChange={handleSessionChange}
-        theme={theme}
-        onThemeChange={writeTheme}
-        selectionLocked={phase !== "idle" && phase !== "stopped"}
-      />
-      <div className="border-b border-border bg-muted">
+      <div className={fadeCls} aria-hidden={focused} inert={focused}>
+        <TopBar
+          puzzleId={puzzleId}
+          onPuzzleChange={handlePuzzleChange}
+          sessions={[
+            { id: session.id, name: session.name, count: solves.length },
+          ]}
+          sessionId={session.id}
+          onSessionChange={handleSessionChange}
+          theme={theme}
+          onThemeChange={writeTheme}
+          selectionLocked={phase !== "idle" && phase !== "stopped"}
+        />
+      </div>
+      <div
+        className={`border-b border-border bg-muted ${fadeCls}`}
+        aria-hidden={focused}
+        inert={focused}
+      >
         <p className="mx-auto max-w-6xl px-4 py-2 text-sm text-muted-foreground sm:px-6">
           Timer and scrambles are live. Solves stay in memory only — refreshing
           loses them until local saving ships.
@@ -267,35 +292,45 @@ export default function TimerApp() {
             ao5={ao5}
             pendingSolve={pendingSolve}
             scrambleReady={scrambleState.status === "ready"}
-            onToggle={timer.toggle}
             onSetPenalty={handleSetPenalty}
           />
-          <ScramblePanel
-            puzzleId={puzzleId}
-            puzzleLabel={puzzleLabel(puzzleId)}
-            scramble={scrambleState.scramble}
-            status={scrambleState.status}
-            error={scrambleState.error}
-            newScrambleDisabled={
-              scrambleState.status === "generating" ||
-              (phase !== "idle" && phase !== "stopped")
-            }
-            onNewScramble={handleNewScramble}
-          />
+          <div className={fadeCls} aria-hidden={focused} inert={focused}>
+            <ScramblePanel
+              puzzleId={puzzleId}
+              puzzleLabel={puzzleLabel(puzzleId)}
+              scramble={scrambleState.scramble}
+              status={scrambleState.status}
+              error={scrambleState.error}
+              newScrambleDisabled={
+                scrambleState.status === "generating" ||
+                (phase !== "idle" && phase !== "stopped")
+              }
+              onNewScramble={handleNewScramble}
+            />
+          </div>
         </div>
-        <div className="grid items-start gap-4 lg:grid-cols-2 sm:gap-6">
+        <div
+          className={`grid items-start gap-4 lg:grid-cols-2 sm:gap-6 ${fadeCls}`}
+          aria-hidden={focused}
+          inert={focused}
+        >
           <SolveHistory
             solves={solves}
             sessionName={session.name}
             pbMs={pbMs}
+            onDelete={handleDeleteSolve}
           />
           <Statistics solves={solves} />
         </div>
       </main>
-      <footer className="border-t border-border px-4 py-4 sm:px-6">
+      <footer
+        className={`border-t border-border px-4 py-4 sm:px-6 ${fadeCls}`}
+        aria-hidden={focused}
+        inert={focused}
+      >
         <p className="mx-auto max-w-6xl text-sm text-muted-foreground">
-          Shortcuts: Space start/stop · N new scramble · D toggle DNF on the
-          last solve.
+          Shortcuts: Space hold, release to start, press to stop · N new
+          scramble · D toggle DNF on the last solve.
         </p>
         <p className="mx-auto mt-1 max-w-6xl text-sm text-muted-foreground">
           Solves are kept in memory only until local saving ships. Nothing is

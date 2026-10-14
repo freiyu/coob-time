@@ -1,4 +1,5 @@
-import { Award } from "lucide-react";
+import { useState } from "react";
+import { Award, Trash2 } from "lucide-react";
 import type { SolveRecord } from "@/lib/storage/types";
 import { effectiveMs, formatMs } from "@/lib/statistics";
 
@@ -6,13 +7,16 @@ interface SolveHistoryProps {
   solves: SolveRecord[];
   sessionName: string;
   pbMs: number | null;
+  onDelete: (id: string) => void;
 }
 
 export default function SolveHistory({
   solves,
   sessionName,
   pbMs,
+  onDelete,
 }: SolveHistoryProps) {
+  const [confirmId, setConfirmId] = useState<string | null>(null);
   const rows = solves
     .map((solve, index) => ({ solve, number: index + 1 }))
     .reverse();
@@ -49,6 +53,9 @@ export default function SolveHistory({
               </th>
               <th scope="col" className="px-4 py-2.5 text-right sm:px-6">
                 Status
+              </th>
+              <th scope="col" className="px-4 py-2.5 text-right sm:px-6">
+                <span className="sr-only">Actions</span>
               </th>
             </tr>
           </thead>
@@ -94,6 +101,38 @@ export default function SolveHistory({
                         </span>
                       )}
                     </span>
+                  </td>
+                  <td className="px-4 py-2.5 text-right sm:px-6">
+                    {confirmId === solve.id ? (
+                      <span className="inline-flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            onDelete(solve.id);
+                            setConfirmId(null);
+                          }}
+                          className="rounded-lg bg-danger px-3 py-1.5 text-sm font-medium text-danger-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                          Delete
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setConfirmId(null)}
+                          className="rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-secondary-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                          Cancel
+                        </button>
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        aria-label={`Delete solve ${number}`}
+                        onClick={() => setConfirmId(solve.id)}
+                        className="rounded-lg p-2 text-muted-foreground transition-colors hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      >
+                        <Trash2 aria-hidden className="size-4" />
+                      </button>
+                    )}
                   </td>
                 </tr>
               );

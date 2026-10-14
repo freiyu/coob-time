@@ -43,13 +43,15 @@ export function useTimer(options: UseTimerOptions) {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.repeat) return;
       if (event.metaKey || event.ctrlKey || event.altKey) return;
       if (isTypingTarget(event.target)) return;
       if (isInsideMenu(event.target)) return;
 
       if (event.code === "Space") {
+        // Held Space scrolls the page via auto-repeat keydowns, so block
+        // every Space (including repeats) before the repeat guard.
         event.preventDefault();
+        if (event.repeat) return;
         if (engine.holdToReady && engine.phase !== "running") {
           if (canStartRef.current()) engine.arm();
         } else {
@@ -57,6 +59,8 @@ export function useTimer(options: UseTimerOptions) {
         }
         return;
       }
+
+      if (event.repeat) return;
       if (event.key === "n" || event.key === "N") {
         if (engine.phase === "idle" || engine.phase === "stopped") {
           onNewScrambleRef.current();

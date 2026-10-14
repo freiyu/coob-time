@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { Penalty, SolveRecord } from "@/lib/storage/types";
 import { effectiveMs, formatMs } from "@/lib/statistics";
 import type { TimerEngine, TimerPhase } from "@/lib/timer/types";
@@ -11,12 +11,11 @@ interface TimerCardProps {
   ao5: number | null;
   pendingSolve: SolveRecord | null;
   scrambleReady: boolean;
-  onToggle: () => void;
   onSetPenalty: (penalty: Penalty) => void;
 }
 
 const STATE_LABEL: Record<TimerPhase, string> = {
-  idle: "Press Space to start",
+  idle: "Hold Space to start",
   holding: "Hold…",
   ready: "Ready",
   running: "Running",
@@ -31,10 +30,26 @@ export default function TimerCard({
   ao5,
   pendingSolve,
   scrambleReady,
-  onToggle,
   onSetPenalty,
 }: TimerCardProps) {
   const [elapsed, setElapsed] = useState(0);
+  const focused = phase === "running";
+  const cardRef = useRef<HTMLElement>(null);
+  const [flip, setFlip] = useState<{ dx: number; dy: number } | null>(null);
+
+  useLayoutEffect(() => {
+    const el = cardRef.current;
+    if (!focused) {
+      setFlip(null);
+      return;
+    }
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    setFlip({
+      dx: window.innerWidth / 2 - (rect.left + rect.width / 2),
+      dy: window.innerHeight / 2 - (rect.top + rect.height / 2),
+    });
+  }, [focused]);
 
   useEffect(() => {
     if (phase !== "running") {
@@ -65,35 +80,49 @@ export default function TimerCard({
     phase === "stopped" && pendingSolve && pendingSolve.penalty !== "none"
       ? ` ${pendingSolve.penalty === "plus2" ? "+2 applied" : "DNF applied"}`
       : "";
-  const toggleDisabled = phase !== "running" && !scrambleReady;
+  const digitColor =
+    phase === "holding"
+      ? "text-destructive"
+      : phase === "ready"
+        ? "text-brand-strong"
+        : "text-foreground";
+  const stateColor =
+    phase === "holding"
+      ? "text-destructive"
+      : phase === "ready"
+        ? "text-brand-strong"
+        : "text-muted-foreground";
+  const ringCls =
+    phase === "holding"
+      ? "ring-1 ring-destructive"
+      : phase === "ready"
+        ? "ring-1 ring-brand"
+        : "";
 
   return (
-    <section aria-label="Timer">
-      <div className="flex h-full min-h-[38vh] flex-col items-center justify-center gap-4 rounded-[14px] border border-border bg-card px-4 py-8 sm:py-10">
-        <button
-          type="button"
-          onClick={onToggle}
-          disabled={toggleDisabled}
-          className="flex w-full flex-col items-center justify-center gap-4 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default"
-        >
-          <span className="text-[clamp(3.5rem,14vw,9rem)] leading-none font-bold tabular-nums text-foreground">
+    <section
+      ref={cardRef}
+      aria-label="Timer"
+      className={`transition-transform duration-300 ease-out motion-reduce:transition-none ${
+        flip ? "z-10" : ""
+      }`}
+      style={flip ? { transform: `translate(${flip.dx}px, ${flip.dy}px)` } : undefined}
+    >
+      <div
+        className={`flex h-full min-h-[38vh] flex-col items-center justify-center gap-4 rounded-[14px] border border-border bg-card px-4 py-8 sm:py-10 ${ringCls}`}
+      >
+        <div className="flex w-full flex-col items-center justify-center gap-4">
+          <span
+            className={`text-[clamp(3.5rem,14vw,9rem)] leading-none font-bold tabular-nums ${digitColor}`}
+          >
             {digits}
           </span>
-          <span className="text-sm font-medium text-muted-foreground">
-            {phase === "idle" && scrambleReady ? (
-              <>
-                <span className="hidden [@media(hover:hover)]:inline">
-                  Press Space to start
-                </span>
-                <span className="hidden [@media(hover:none)]:inline">
-                  Tap to start
-                </span>
-              </>
-            ) : (
-              label
-            )}
-          </span>
-        </button>
+          {!focused && (
+            <span className={`text-sm font-medium ${stateColor}`}>
+              {phase === "idle" && scrambleReady ? "Hold Space to start" : label}
+            </span>
+          )}
+        </div>
         {showPenalties && pendingSolve && (
           <div
             role="group"
@@ -130,12 +159,14 @@ export default function TimerCard({
             </button>
           </div>
         )}
-        <div className="mt-2 flex w-full max-w-xs items-baseline justify-between border-t border-border pt-4 text-sm">
-          <span className="text-muted-foreground">Average of 5</span>
-          <span className="font-semibold tabular-nums text-foreground">
-            {ao5 !== null ? formatMs(ao5) : "—"}
-          </span>
-        </div>
+        {!focused && (
+          <div className="mt-2 flex w-full max-w-xs items-baseline justify-between border-t border-border pt-4 text-sm">
+            <span className="text-muted-foreground">Average of 5</span>
+            <span className="font-semibold tabular-nums text-foreground">
+              {ao5 !== null ? formatMs(ao5) : "—"}
+            </span>
+          </div>
+        )}
       </div>
       <p aria-live="polite" className="sr-only">
         {label + penaltyNote}

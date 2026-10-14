@@ -52,7 +52,7 @@ export default function ScramblePanel({
   return (
     <section
       aria-label="Scramble"
-      className="rounded-[14px] border border-border bg-card p-4 sm:p-6"
+      className="h-full rounded-[14px] border border-border bg-card p-4 sm:p-6"
     >
       <header className="flex flex-wrap items-center gap-3">
         <div className="flex flex-1 flex-wrap items-center gap-2">

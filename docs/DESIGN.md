@@ -84,19 +84,20 @@ at 4.8:1 or better on the page background and card in both themes.
 
 | State | Digits | Label text | Color cue |
 |---|---|---|---|
-| Idle | `0.00` in foreground | "Press Space to start" (touch: "Tap to start") | none |
-| Holding (hold-to-ready, not ready yet) | foreground | "Hold…" | danger text color on the label and a thin ring |
-| Ready (release to start) | foreground | "Ready" | brand text color on the label and a thin ring |
-| Running | foreground | "Running" | none, keep the screen calm |
-| Stopped, pending | foreground | "Saving…" then "Saved" with a check icon | brand on "Saved" |
+| Idle | `0.00` in foreground | "Hold Space to start" (keyboard only; mouse/tap does nothing) | none |
+| Holding (hold-to-ready, not ready yet) | danger | "Hold…" | danger text color on the digits and label, thin danger ring on the card |
+| Ready (release to start) | brand | "Ready" | brand text color on the digits and label, thin brand ring on the card |
+| Running | foreground | "Running" (sr-only while focused) | none, keep the screen calm |
+| Stopped, pending | foreground (effective time) | "Saving…" then "Saved" with a check icon | brand on "Saved" |
 | +2 | foreground (effective time) | "+2" badge | warning badge |
 | DNF | foreground, struck or labeled | "DNF" badge | danger badge |
 
 Rules:
+- **Running focus mode**: while running every other element fades out (300ms, opacity only) and the timer card animates to the center of the viewport (translate transition, no layout shift). On stop it reverses. All of it honors `prefers-reduced-motion`.
 - Digits use **tabular figures** (`tabular-nums`) so the width never changes while counting. No layout shift between states.
 - Weight 600 to 700, one font family, very large (use `clamp()` so it scales from a small phone to a wide monitor), never thin.
 - Update the display smoothly, but never let the display rate affect the measured time.
-- The touch control is large (at least 56px high, ideally most of the timer card) and has a text label.
+- Start and stop are keyboard-only (Space), per the owner's decision overriding PRD FR-T04 touch controls: the timer is not a clickable control, and clicks/taps on it do nothing.
 - Announce state changes ("Ready", "Saved") to assistive technology, never every tick.
 
 ## Scramble panel
@@ -108,7 +109,7 @@ Rules:
 ## Layout (PRD 6.2)
 - Desktop: top bar (name, puzzle selector, session selector, theme and settings), a large timer, the scramble panel,
   then statistics and history in tabs or two columns.
-- Mobile: timer and touch control near the center, puzzle selector reachable without a cramped bar, history and statistics in tabs.
+- Mobile: timer near the center, puzzle selector reachable without a cramped bar, history and statistics in tabs.
 - Every interactive target is comfortable to tap.
 
 ## Statistics and history

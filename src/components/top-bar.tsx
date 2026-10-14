@@ -64,7 +64,7 @@ export default function TopBar({
       <div className="mx-auto flex w-full max-w-6xl items-center gap-3 px-4 py-3 sm:px-6">
         <div className="flex flex-1 items-center gap-2">
           <Box aria-hidden className="size-5 text-brand-strong" />
-          <span className="text-base font-semibold">CubeTime</span>
+          <h1 className="text-base font-semibold">CubeTime</h1>
         </div>
         <div className="flex flex-wrap items-center justify-end gap-2">
           <Menu

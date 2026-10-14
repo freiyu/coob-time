@@ -21,7 +21,7 @@ export default function SolveHistory({
     >
       <header className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3 sm:px-6">
         <h2 className="text-sm font-semibold">Solve history</h2>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           {solves.length} {solves.length === 1 ? "solve" : "solves"} ·{" "}
           {sessionName}
         </p>
@@ -37,7 +37,7 @@ export default function SolveHistory({
       ) : (
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-border text-xs font-medium text-muted-foreground">
+            <tr className="border-b border-border text-sm font-medium text-muted-foreground">
               <th scope="col" className="px-4 py-2.5 text-left sm:px-6">
                 Solve
               </th>
@@ -75,18 +75,18 @@ export default function SolveHistory({
                   <td className="px-4 py-2.5 text-right sm:px-6">
                     <span className="inline-flex items-center gap-1">
                       {isPb && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-brand-soft px-2 py-0.5 text-xs font-semibold text-brand-soft-foreground">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-brand-soft px-2 py-0.5 text-sm font-semibold text-brand-soft-foreground">
                           <Award aria-hidden className="size-3" />
                           PB
                         </span>
                       )}
                       {solve.penalty === "plus2" && (
-                        <span className="rounded-full bg-warning px-2 py-0.5 text-xs font-semibold text-warning-foreground">
+                        <span className="rounded-full bg-warning px-2 py-0.5 text-sm font-semibold text-warning-foreground">
                           +2
                         </span>
                       )}
                       {solve.penalty === "dnf" && (
-                        <span className="rounded-full bg-danger px-2 py-0.5 text-xs font-semibold text-danger-foreground">
+                        <span className="rounded-full bg-danger px-2 py-0.5 text-sm font-semibold text-danger-foreground">
                           DNF
                         </span>
                       )}

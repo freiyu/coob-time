@@ -1,6 +1,6 @@
 # CubeTime — Code Map
 <!-- Maintained by @context-keeper. Hard cap 200 lines. Facts only. Paths, not line numbers. -->
-Synced at: 46832f2 | Phase: 2 (Prototype, in progress)
+Synced at: be20718 | Phase: 2 approved (tag phase-2-approved @ 22a9cb2); Phase 3 not started
 
 ## 1. Quick facts
 - Stack: Next.js 16.4 App Router + Turbopack (cacheComponents, partialPrefetching), React 19.3, TypeScript strict, Tailwind CSS v4 via @tailwindcss/turbopack loader (tokens in src/app/globals.css, dark via `.dark` class), lucide-react icons, Geist fonts.
@@ -12,7 +12,7 @@ Synced at: 46832f2 | Phase: 2 (Prototype, in progress)
 | Path | Responsibility |
 |---|---|
 | src/app | App Router shell: layout.tsx (fonts, metadata, pre-paint theme script), page.tsx (renders TimerApp), globals.css (Tailwind v4 tokens, `.dark` overrides), favicon |
-| src/components | Prototype UI: timer-app (client root: theme + puzzle/session/scramble state), top-bar, timer-card, scramble-panel, scramble-view (2D scramble-display), solve-history, statistics, menu |
+| src/components | Prototype UI: timer-app (client root: theme + puzzle/session/scramble state; main = row1 grid lg:grid-cols-2 TimerCard+ScramblePanel, row2 SolveHistory+Statistics grid), top-bar, timer-card (takes `ao5: number \| null` prop, renders "Average of 5" row), scramble-panel, scramble-view (2D scramble-display, h-44/sm:h-52), solve-history, statistics, menu |
 | src/lib | Only sample-data.ts today: static prototype data + stats helpers. timer / scrambles / statistics / storage / backup folders not created yet |
 | docs | PRD_CUBETIME.md, DESIGN.md, PROGRESS.md, CODEMAP.md, REVIEW-LOG.md, PROMPTS.md, TESTING-PRD.md |
 | .opencode/agents | Subagent definitions (context-keeper, project-manager, reviewer, tester, …) |
@@ -87,6 +87,7 @@ The prototype view renders these scrambles with scramble-display@0.59.1 (cubing.
 - Add a storage migration: n/a until Phase 5 (src/lib/storage).
 - Client vs server components: layout.tsx/page.tsx are server components; all interactive UI hangs off the `"use client"` root src/components/timer-app.tsx. Browser-only APIs (localStorage, matchMedia) stay behind that root.
 - Heavy client lib (SSR-safe): `await import(...)` inside useEffect with a cancelled flag + cleanup — the pattern in src/components/scramble-view.tsx.
+- Derived stats under the timer: compute in timer-app from sample-data helpers (e.g. `ao5 = aoN(solves, 5)`) and pass as a prop to a presentational card (pattern in timer-card.tsx).
 
 ## 9. Decisions and gotchas that affect code
 - Scramble generation library = cubing.js (runtime dependency since db456d8; spike passed Node-side in Phase 2; browser/worker verification is Phase 4 work); scramble-display@0.59.1 (added at 46832f2) is only the 2D render wrapper. Sample scrambles in src/lib/sample-data.ts came from the cubing spike (square-1 #2 was regenerated once after review found it truncated).

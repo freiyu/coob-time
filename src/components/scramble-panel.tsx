@@ -51,7 +51,7 @@ export default function ScramblePanel({
       <header className="flex flex-wrap items-center gap-3">
         <div className="flex flex-1 flex-wrap items-center gap-2">
           <h2 className="text-sm font-semibold">{puzzleLabel}</h2>
-          <span className="rounded-full bg-info px-2 py-0.5 text-xs font-medium text-info-foreground">
+          <span className="rounded-full bg-info px-2 py-0.5 text-sm font-medium text-info-foreground">
             Sample data
           </span>
         </div>

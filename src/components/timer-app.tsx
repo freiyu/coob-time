@@ -313,10 +313,10 @@ export default function TimerApp() {
     generateFresh(puzzleId);
   };
 
-  const handleSetPenalty = (penalty: Penalty) => {
-    const last = solves.at(-1);
-    if (!last) return;
-    const updated: SolveRecord = { ...last, penalty };
+  const handleSetPenalty = (solveId: string, penalty: Penalty) => {
+    const target = solves.find((candidate) => candidate.id === solveId);
+    if (!target) return;
+    const updated: SolveRecord = { ...target, penalty };
     const now = new Date().toISOString();
     setSessions((prev) =>
       prev.map((candidate) =>
@@ -326,7 +326,7 @@ export default function TimerApp() {
               ...candidate,
               updatedAt: now,
               solves: candidate.solves.map((solve) =>
-                solve.id === last.id ? updated : solve,
+                solve.id === solveId ? updated : solve,
               ),
             },
       ),
@@ -343,7 +343,7 @@ export default function TimerApp() {
   const handleToggleDnf = () => {
     const last = solves.at(-1);
     if (!last) return;
-    handleSetPenalty(last.penalty === "dnf" ? "none" : "dnf");
+    handleSetPenalty(last.id, last.penalty === "dnf" ? "none" : "dnf");
   };
 
   const handleNewScramble = () => {
@@ -393,6 +393,26 @@ export default function TimerApp() {
     setSessionId(nextSessionId);
   };
 
+  const handleNewSession = () => {
+    if (phase !== "idle" && phase !== "stopped") return;
+    const now = new Date().toISOString();
+    const count = sessions.filter(
+      (candidate) => candidate.puzzleId === puzzleId,
+    ).length;
+    const record: SessionRecord = {
+      id: crypto.randomUUID(),
+      name: `Session ${count + 1}`,
+      puzzleId,
+      createdAt: now,
+      updatedAt: now,
+    };
+    setSessions((prev) => [...prev, { ...record, solves: [] }]);
+    setSessionId(record.id);
+    setSaveState(null);
+    setSaveNotice(null);
+    putSession(record).catch(persistFailure);
+  };
+
   const pendingSolve =
     phase === "stopped" ? (solves.at(-1) ?? null) : null;
   const ao5 = aoN(solves, 5);
@@ -411,10 +431,24 @@ export default function TimerApp() {
           puzzleId={puzzleId}
           onPuzzleChange={handlePuzzleChange}
           sessions={[
-            { id: session.id, name: session.name, count: solves.length },
+            ...(sessions.some(
+              (candidate) =>
+                candidate.id === session.id &&
+                candidate.puzzleId === puzzleId,
+            )
+              ? []
+              : [{ id: session.id, name: session.name, count: solves.length }]),
+            ...sessions
+              .filter((candidate) => candidate.puzzleId === puzzleId)
+              .map((candidate) => ({
+                id: candidate.id,
+                name: candidate.name,
+                count: candidate.solves.length,
+              })),
           ]}
           sessionId={session.id}
           onSessionChange={handleSessionChange}
+          onNewSession={handleNewSession}
           theme={theme}
           onThemeChange={writeTheme}
           selectionLocked={phase !== "idle" && phase !== "stopped"}
@@ -466,7 +500,9 @@ export default function TimerApp() {
             scrambleReady={scrambleState.status === "ready"}
             holdMode={settings?.startMode !== "press"}
             saveState={saveState}
-            onSetPenalty={handleSetPenalty}
+            onSetPenalty={(penalty) => {
+              if (pendingSolve) handleSetPenalty(pendingSolve.id, penalty);
+            }}
           />
           <div className={fadeCls} aria-hidden={focused} inert={focused}>
             <ScramblePanel
@@ -493,6 +529,7 @@ export default function TimerApp() {
             sessionName={session.name}
             pbMs={pbMs}
             onDelete={handleDeleteSolve}
+            onSetPenalty={handleSetPenalty}
           />
           <Statistics solves={solves} />
         </div>

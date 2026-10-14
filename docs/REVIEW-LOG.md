@@ -80,4 +80,4 @@ Only the human supplies scores, satisfaction, bug notes, and the decision. Nobod
 - Satisfied / Not satisfied: (pending)
 - Bug notes and requested revisions: (pending — no human review yet)
 - Prompt used: PRD Section 14 Phase 5 prompt
-- Human decision: (pending)
+- Human decision: Approve — 2026-10-14, quote: "fungsional udah oke" (opening words of the message: "fungsional udah oke, sekarang aku mau minta tolong ke kamu tambahin beberapa fitur lagi ya"); tag phase-5-approved at 6995b86 (created by human; implementation commit — docs commit 3ab828b sits on top). Scores/satisfaction: not given. The rest of the same message is follow-up feature requests, not part of this approval: new session creation in the session dropdown; solve-detail popup from history rows with time stats + scramble + scramble visual; +2/DNF buttons in the Status column and in the popup; history columns reworked to time/ao5/ao12/status/delete; clicking an ao5/ao12 cell opens a horizontal list of the window's times.

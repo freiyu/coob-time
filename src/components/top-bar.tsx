@@ -18,6 +18,7 @@ interface TopBarProps {
   sessions: SessionOption[];
   sessionId: string;
   onSessionChange: (sessionId: string) => void;
+  onNewSession: () => void;
   theme: ThemeChoice;
   onThemeChange: (theme: ThemeChoice) => void;
   selectionLocked: boolean;
@@ -35,6 +36,7 @@ export default function TopBar({
   sessions,
   sessionId,
   onSessionChange,
+  onNewSession,
   theme,
   onThemeChange,
   selectionLocked,
@@ -46,12 +48,20 @@ export default function TopBar({
     onSelect: () => onPuzzleChange(puzzle.id),
   }));
 
-  const sessionItems: MenuItem[] = sessions.map((session) => ({
-    label: `${session.name} (${session.count})`,
-    value: session.id,
-    disabled: selectionLocked && session.id !== sessionId,
-    onSelect: () => onSessionChange(session.id),
-  }));
+  const sessionItems: MenuItem[] = [
+    ...sessions.map((session) => ({
+      label: `${session.name} (${session.count})`,
+      value: session.id,
+      disabled: selectionLocked && session.id !== sessionId,
+      onSelect: () => onSessionChange(session.id),
+    })),
+    {
+      label: "+ New session",
+      value: "new-session",
+      disabled: selectionLocked,
+      onSelect: onNewSession,
+    },
+  ];
 
   const themeItems: MenuItem[] = themeOptions.map((option) => ({
     label: option.label,

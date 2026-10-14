@@ -1,13 +1,126 @@
-import { useState } from "react";
-import { Award, Trash2 } from "lucide-react";
-import type { SolveRecord } from "@/lib/storage/types";
-import { effectiveMs, formatMs } from "@/lib/statistics";
+import { useEffect, useState } from "react";
+import { Award, Trash2, X } from "lucide-react";
+import ScrambleView from "@/components/scramble-view";
+import { type PuzzleId } from "@/lib/puzzles";
+import type { Penalty, SolveRecord } from "@/lib/storage/types";
+import { aoN, effectiveMs, formatMs } from "@/lib/statistics";
 
 interface SolveHistoryProps {
   solves: SolveRecord[];
   sessionName: string;
   pbMs: number | null;
   onDelete: (id: string) => void;
+  onSetPenalty: (id: string, penalty: Penalty) => void;
+}
+
+interface AoWindow {
+  n: number;
+  number: number;
+  value: number;
+  window: SolveRecord[];
+}
+
+function Dialog({
+  title,
+  onClose,
+  children,
+}: {
+  title: string;
+  onClose: () => void;
+  children: React.ReactNode;
+}) {
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <button
+        type="button"
+        aria-label="Close dialog"
+        onClick={onClose}
+        className="absolute inset-0 h-full w-full cursor-default bg-background/60"
+      />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        className="relative w-full max-w-md rounded-[14px] border border-border bg-card shadow-lg"
+      >
+        <header className="flex items-center justify-between border-b border-border px-4 py-3">
+          <h3 className="text-sm font-semibold">{title}</h3>
+          <button
+            type="button"
+            aria-label="Close"
+            onClick={onClose}
+            className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <X aria-hidden className="size-4" />
+          </button>
+        </header>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function PenaltyButtons({
+  solve,
+  onSetPenalty,
+  onSettled,
+}: {
+  solve: SolveRecord;
+  onSetPenalty: (id: string, penalty: Penalty) => void;
+  onSettled?: () => void;
+}) {
+  const toggle = (penalty: Penalty) => {
+    onSetPenalty(solve.id, solve.penalty === penalty ? "none" : penalty);
+    onSettled?.();
+  };
+  const chip = (active: boolean) =>
+    `rounded-lg border px-2 py-1 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+      active
+        ? "border-transparent"
+        : "border-border text-secondary-foreground hover:bg-muted"
+    }`;
+  return (
+    <span className="inline-flex gap-1.5">
+      <button
+        type="button"
+        aria-pressed={solve.penalty === "plus2"}
+        aria-label={`Toggle +2 on solve ${solve.id}`}
+        onClick={(event) => {
+          event.stopPropagation();
+          toggle("plus2");
+        }}
+        className={`${chip(solve.penalty === "plus2")} ${
+          solve.penalty === "plus2"
+            ? "bg-warning text-warning-foreground"
+            : ""
+        }`}
+      >
+        +2
+      </button>
+      <button
+        type="button"
+        aria-pressed={solve.penalty === "dnf"}
+        aria-label={`Toggle DNF on solve ${solve.id}`}
+        onClick={(event) => {
+          event.stopPropagation();
+          toggle("dnf");
+        }}
+        className={`${chip(solve.penalty === "dnf")} ${
+          solve.penalty === "dnf" ? "bg-danger text-danger-foreground" : ""
+        }`}
+      >
+        DNF
+      </button>
+    </span>
+  );
 }
 
 export default function SolveHistory({
@@ -15,11 +128,22 @@ export default function SolveHistory({
   sessionName,
   pbMs,
   onDelete,
+  onSetPenalty,
 }: SolveHistoryProps) {
   const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [detailId, setDetailId] = useState<string | null>(null);
+  const [aoWindow, setAoWindow] = useState<AoWindow | null>(null);
+
   const rows = solves
-    .map((solve, index) => ({ solve, number: index + 1 }))
+    .map((solve, index) => ({
+      solve,
+      number: index + 1,
+      ao5: index >= 4 ? aoN(solves.slice(0, index + 1), 5) : null,
+      ao12: index >= 11 ? aoN(solves.slice(0, index + 1), 12) : null,
+    }))
     .reverse();
+
+  const detail = rows.find((row) => row.solve.id === detailId) ?? null;
 
   return (
     <section
@@ -41,103 +165,235 @@ export default function SolveHistory({
           </p>
         </div>
       ) : (
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border text-sm font-medium text-muted-foreground">
-              <th scope="col" className="px-4 py-2.5 text-left sm:px-6">
-                Solve
-              </th>
-              <th scope="col" className="px-2 py-2.5 text-right">
-                Time
-              </th>
-              <th scope="col" className="px-4 py-2.5 text-right sm:px-6">
-                Status
-              </th>
-              <th scope="col" className="px-4 py-2.5 text-right sm:px-6">
-                <span className="sr-only">Actions</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map(({ solve, number }) => {
-              const effective = effectiveMs(solve);
-              const isPb =
-                solves.length > 1 &&
-                pbMs !== null &&
-                effective !== null &&
-                effective === pbMs;
-              return (
-                <tr
-                  key={solve.id}
-                  className="border-b border-border last:border-b-0"
-                >
-                  <td className="px-4 py-2.5 text-muted-foreground sm:px-6">
-                    #{number}
-                  </td>
-                  <td className="px-2 py-2.5 text-right font-semibold tabular-nums">
-                    {effective === null ? (
-                      <span className="text-muted-foreground">—</span>
-                    ) : (
-                      formatMs(effective)
-                    )}
-                  </td>
-                  <td className="px-4 py-2.5 text-right sm:px-6">
-                    <span className="inline-flex items-center gap-1">
-                      {isPb && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-brand-soft px-2 py-0.5 text-sm font-semibold text-brand-soft-foreground">
-                          <Award aria-hidden className="size-3" />
-                          PB
-                        </span>
-                      )}
-                      {solve.penalty === "plus2" && (
-                        <span className="rounded-full bg-warning px-2 py-0.5 text-sm font-semibold text-warning-foreground">
-                          +2
-                        </span>
-                      )}
-                      {solve.penalty === "dnf" && (
-                        <span className="rounded-full bg-danger px-2 py-0.5 text-sm font-semibold text-danger-foreground">
-                          DNF
-                        </span>
-                      )}
-                    </span>
-                  </td>
-                  <td className="px-4 py-2.5 text-right sm:px-6">
-                    {confirmId === solve.id ? (
-                      <span className="inline-flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            onDelete(solve.id);
-                            setConfirmId(null);
-                          }}
-                          className="rounded-lg bg-destructive px-3 py-1.5 text-sm font-medium text-destructive-foreground transition-colors duration-150 hover:bg-destructive/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                        >
-                          Delete
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setConfirmId(null)}
-                          className="rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-secondary-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                        >
-                          Cancel
-                        </button>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border text-sm font-medium text-muted-foreground">
+                <th scope="col" className="px-4 py-2.5 text-left sm:px-6">
+                  Time
+                </th>
+                <th scope="col" className="px-2 py-2.5 text-right">
+                  Ao5
+                </th>
+                <th scope="col" className="px-2 py-2.5 text-right">
+                  Ao12
+                </th>
+                <th scope="col" className="px-2 py-2.5 text-right">
+                  Status
+                </th>
+                <th scope="col" className="px-4 py-2.5 text-right sm:px-6">
+                  <span className="sr-only">Actions</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map(({ solve, number, ao5, ao12 }) => {
+                const effective = effectiveMs(solve);
+                const isPb =
+                  solves.length > 1 &&
+                  pbMs !== null &&
+                  effective !== null &&
+                  effective === pbMs;
+                return (
+                  <tr
+                    key={solve.id}
+                    onClick={() => setDetailId(solve.id)}
+                    className="cursor-pointer border-b border-border transition-colors last:border-b-0 hover:bg-muted/50"
+                  >
+                    <td className="px-4 py-2.5 sm:px-6">
+                      <span className="text-muted-foreground">#{number} </span>
+                      <span className="font-semibold tabular-nums">
+                        {effective === null ? (
+                          <span className="text-muted-foreground">—</span>
+                        ) : (
+                          formatMs(effective)
+                        )}
                       </span>
-                    ) : (
-                      <button
-                        type="button"
-                        aria-label={`Delete solve ${number}`}
-                        onClick={() => setConfirmId(solve.id)}
-                        className="rounded-lg p-2 text-muted-foreground transition-colors hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      >
-                        <Trash2 aria-hidden className="size-4" />
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                    </td>
+                    <td className="px-2 py-2.5 text-right tabular-nums">
+                      {ao5 === null ? (
+                        <span className="text-muted-foreground">—</span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setAoWindow({
+                              n: 5,
+                              number,
+                              value: ao5,
+                              window: solves.slice(number - 5, number),
+                            });
+                          }}
+                          className="rounded px-1 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                          {formatMs(ao5)}
+                        </button>
+                      )}
+                    </td>
+                    <td className="px-2 py-2.5 text-right tabular-nums">
+                      {ao12 === null ? (
+                        <span className="text-muted-foreground">—</span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setAoWindow({
+                              n: 12,
+                              number,
+                              value: ao12,
+                              window: solves.slice(number - 12, number),
+                            });
+                          }}
+                          className="rounded px-1 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                          {formatMs(ao12)}
+                        </button>
+                      )}
+                    </td>
+                    <td
+                      className="px-2 py-2.5 text-right"
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      <span className="inline-flex items-center gap-1">
+                        {isPb && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-brand-soft px-2 py-0.5 text-sm font-semibold text-brand-soft-foreground">
+                            <Award aria-hidden className="size-3" />
+                            PB
+                          </span>
+                        )}
+                        {solve.penalty === "plus2" && (
+                          <span className="rounded-full bg-warning px-2 py-0.5 text-sm font-semibold text-warning-foreground">
+                            +2
+                          </span>
+                        )}
+                        {solve.penalty === "dnf" && (
+                          <span className="rounded-full bg-danger px-2 py-0.5 text-sm font-semibold text-danger-foreground">
+                            DNF
+                          </span>
+                        )}
+                        <PenaltyButtons
+                          solve={solve}
+                          onSetPenalty={onSetPenalty}
+                        />
+                      </span>
+                    </td>
+                    <td
+                      className="px-4 py-2.5 text-right sm:px-6"
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      {confirmId === solve.id ? (
+                        <span className="inline-flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              onDelete(solve.id);
+                              setConfirmId(null);
+                            }}
+                            className="rounded-lg bg-destructive px-3 py-1.5 text-sm font-medium text-destructive-foreground transition-colors duration-150 hover:bg-destructive/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          >
+                            Delete
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setConfirmId(null)}
+                            className="rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-secondary-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          >
+                            Cancel
+                          </button>
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          aria-label={`Delete solve ${number}`}
+                          onClick={() => setConfirmId(solve.id)}
+                          className="rounded-lg p-2 text-muted-foreground transition-colors hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                          <Trash2 aria-hidden className="size-4" />
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {detail && (
+        <Dialog
+          title={`Solve #${detail.number}`}
+          onClose={() => setDetailId(null)}
+        >
+          <div className="space-y-4 p-4">
+            <div>
+              <p className="text-3xl font-semibold tabular-nums">
+                {effectiveMs(detail.solve) === null
+                  ? "DNF"
+                  : formatMs(effectiveMs(detail.solve)!)}
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Raw {formatMs(detail.solve.rawTimeMs)}
+                {detail.solve.penalty === "plus2" && " · +2 penalty"}
+                {detail.solve.penalty === "dnf" && " · DNF"}
+                {" · "}
+                {new Date(detail.solve.createdAt).toLocaleString()}
+              </p>
+            </div>
+            <PenaltyButtons
+              solve={detail.solve}
+              onSetPenalty={onSetPenalty}
+            />
+            <div>
+              <p className="text-sm font-medium">Scramble</p>
+              <p className="mt-1 break-words text-sm text-muted-foreground">
+                {detail.solve.scramble || "—"}
+              </p>
+              {detail.solve.scramble && (
+                <ScrambleView
+                  puzzleId={detail.solve.puzzleId as PuzzleId}
+                  scramble={detail.solve.scramble}
+                />
+              )}
+            </div>
+          </div>
+        </Dialog>
+      )}
+
+      {aoWindow && (
+        <Dialog
+          title={`Ao${aoWindow.n} of solve #${aoWindow.number}`}
+          onClose={() => setAoWindow(null)}
+        >
+          <div className="p-4">
+            <p className="text-2xl font-semibold tabular-nums">
+              {formatMs(aoWindow.value)}
+            </p>
+            <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+              {aoWindow.window.map((solve, index) => {
+                const value = effectiveMs(solve);
+                const isCurrent = index === aoWindow.window.length - 1;
+                return (
+                  <span
+                    key={solve.id}
+                    className={`shrink-0 rounded-lg border border-border px-2 py-1 text-sm tabular-nums ${
+                      isCurrent
+                        ? "font-semibold text-brand-strong"
+                        : "text-muted-foreground"
+                    }`}
+                  >
+                    {value === null ? "DNF" : formatMs(value)}
+                  </span>
+                );
+              })}
+            </div>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Oldest to newest; the highlighted time is this solve.
+            </p>
+          </div>
+        </Dialog>
       )}
     </section>
   );

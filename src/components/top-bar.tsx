@@ -2,7 +2,7 @@
 
 import { Box, Monitor, Moon, Sun } from "lucide-react";
 import Menu, { type MenuItem } from "@/components/menu";
-import { PUZZLES, type Puzzle, type PuzzleId } from "@/lib/sample-data";
+import { PUZZLES, type Puzzle, type PuzzleId } from "@/lib/puzzles";
 
 export type ThemeChoice = "dark" | "light" | "system";
 

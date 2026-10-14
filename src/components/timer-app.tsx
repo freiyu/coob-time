@@ -1,22 +1,38 @@
 "use client";
 
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import ScramblePanel from "@/components/scramble-panel";
 import SolveHistory from "@/components/solve-history";
 import Statistics from "@/components/statistics";
 import TimerCard from "@/components/timer-card";
 import TopBar, { type ThemeChoice } from "@/components/top-bar";
-import {
-  SAMPLE_SCRAMBLES,
-  aoN,
-  bestSingle,
-  puzzleLabel,
-  sessionsForPuzzle,
-  type PuzzleId,
-} from "@/lib/sample-data";
+import { puzzleLabel, type PuzzleId } from "@/lib/puzzles";
+import { cubingScrambleProvider } from "@/lib/scrambles/adapter";
+import type { ScrambleResult } from "@/lib/scrambles/types";
+import { aoN, bestSingle } from "@/lib/statistics";
+import type { Penalty, SolveRecord } from "@/lib/storage/types";
+import { useTimer } from "@/lib/timer/use-timer";
+
+const HOLD_TO_READY = false; // becomes a settings toggle in Phase 5
 
 const THEME_KEY = "cubetime-theme";
 const THEME_EVENT = "cubetime-theme-change";
+
+interface Session {
+  id: string;
+  name: string;
+  puzzleId: PuzzleId;
+  solves: SolveRecord[];
+}
+
+interface ScrambleState {
+  status: "ready" | "generating" | "error";
+  scramble: string;
+}
+
+function defaultSessionId(puzzleId: PuzzleId): string {
+  return `${puzzleId}-default`;
+}
 
 function readTheme(): ThemeChoice {
   try {
@@ -50,17 +66,36 @@ function writeTheme(choice: ThemeChoice) {
 
 export default function TimerApp() {
   const [puzzleId, setPuzzleId] = useState<PuzzleId>("3x3");
-  const [sessionId, setSessionId] = useState("default");
-  const [scrambleIndex, setScrambleIndex] = useState(0);
+  const [sessionId, setSessionId] = useState(() => defaultSessionId("3x3"));
+  const [sessions, setSessions] = useState<Session[]>(() => [
+    {
+      id: defaultSessionId("3x3"),
+      name: "Default session",
+      puzzleId: "3x3",
+      solves: [],
+    },
+  ]);
+  const [scrambleState, setScrambleState] = useState<ScrambleState>({
+    status: "generating",
+    scramble: "",
+  });
+  const seqRef = useRef(0);
   const theme = useSyncExternalStore<ThemeChoice>(
     subscribeTheme,
     readTheme,
     () => "dark",
   );
 
-  const sessions = useMemo(() => sessionsForPuzzle(puzzleId), [puzzleId]);
   const session =
-    sessions.find((candidate) => candidate.id === sessionId) ?? sessions[0];
+    sessions.find(
+      (candidate) => candidate.id === sessionId && candidate.puzzleId === puzzleId,
+    ) ?? {
+      id: defaultSessionId(puzzleId),
+      name: "Default session",
+      puzzleId,
+      solves: [],
+    };
+  const solves = session.solves;
 
   useEffect(() => {
     const root = document.documentElement;
@@ -77,37 +112,138 @@ export default function TimerApp() {
     return () => media.removeEventListener("change", apply);
   }, [theme]);
 
+  const applyScrambleResult = useCallback(
+    (seq: number, result: ScrambleResult) => {
+      if (seq !== seqRef.current) return;
+      if (result.ok) {
+        setScrambleState({ status: "ready", scramble: result.scramble });
+      } else {
+        setScrambleState((state) => ({
+          status: "error",
+          scramble: state.scramble,
+        }));
+      }
+    },
+    [],
+  );
+
+  const generate = useCallback(
+    (pid: PuzzleId) => {
+      const seq = ++seqRef.current;
+      cubingScrambleProvider(pid).then((result) => {
+        applyScrambleResult(seq, result);
+      });
+    },
+    [applyScrambleResult],
+  );
+
+  const generateFresh = (pid: PuzzleId) => {
+    setScrambleState((state) => ({
+      status: "generating",
+      scramble: state.scramble,
+    }));
+    generate(pid);
+  };
+
+  useEffect(() => {
+    const seq = ++seqRef.current;
+    cubingScrambleProvider(puzzleId).then((result) => {
+      applyScrambleResult(seq, result);
+    });
+    return () => {
+      seqRef.current += 1;
+    };
+  }, [puzzleId, applyScrambleResult]);
+
+  const handleSolve = (rawTimeMs: number) => {
+    const record: SolveRecord = {
+      id: crypto.randomUUID(),
+      sessionId: session.id,
+      puzzleId,
+      rawTimeMs,
+      penalty: "none",
+      scramble: scrambleState.scramble,
+      createdAt: new Date().toISOString(),
+      source: "timer",
+      schemaVersion: 1,
+    };
+    setSessions((prev) => {
+      const index = prev.findIndex((candidate) => candidate.id === session.id);
+      if (index === -1) {
+        return [...prev, { ...session, solves: [record] }];
+      }
+      const next = [...prev];
+      next[index] = {
+        ...next[index],
+        solves: [...next[index].solves, record],
+      };
+      return next;
+    });
+    generateFresh(puzzleId);
+  };
+
+  const handleSetPenalty = (penalty: Penalty) => {
+    setSessions((prev) =>
+      prev.map((candidate) =>
+        candidate.id !== session.id
+          ? candidate
+          : {
+              ...candidate,
+              solves: candidate.solves.map((solve, index) =>
+                index === candidate.solves.length - 1
+                  ? { ...solve, penalty }
+                  : solve,
+              ),
+            },
+      ),
+    );
+  };
+
+  const handleToggleDnf = () => {
+    const last = solves.at(-1);
+    if (!last) return;
+    handleSetPenalty(last.penalty === "dnf" ? "none" : "dnf");
+  };
+
+  const handleNewScramble = () => {
+    generateFresh(puzzleId);
+  };
+
+  const timer = useTimer({
+    holdToReady: HOLD_TO_READY,
+    canStart: () => scrambleState.status === "ready",
+    onSolve: handleSolve,
+    onNewScramble: handleNewScramble,
+    onToggleDnf: handleToggleDnf,
+  });
+  const { phase } = timer;
+
   const handlePuzzleChange = (nextPuzzleId: PuzzleId) => {
-    const nextSessions = sessionsForPuzzle(nextPuzzleId);
+    setScrambleState((state) => ({
+      status: "generating",
+      scramble: state.scramble,
+    }));
     setPuzzleId(nextPuzzleId);
-    setSessionId(nextSessions[0].id);
-    setScrambleIndex(0);
+    setSessionId(defaultSessionId(nextPuzzleId));
   };
 
   const handleSessionChange = (nextSessionId: string) => {
     setSessionId(nextSessionId);
-    setScrambleIndex(0);
   };
 
-  const scrambles = SAMPLE_SCRAMBLES[puzzleId] ?? [];
-  const scramble =
-    scrambles.length > 0
-      ? scrambles[scrambleIndex % scrambles.length]
-      : "No sample scramble for this puzzle.";
-  const solves = session.solves;
-  const pbMs = bestSingle(solves);
+  const pendingSolve =
+    phase === "stopped" ? (solves.at(-1) ?? null) : null;
   const ao5 = aoN(solves, 5);
+  const pbMs = bestSingle(solves);
 
   return (
     <>
       <TopBar
         puzzleId={puzzleId}
         onPuzzleChange={handlePuzzleChange}
-        sessions={sessions.map((candidate) => ({
-          id: candidate.id,
-          name: candidate.name,
-          count: candidate.solves.length,
-        }))}
+        sessions={[
+          { id: session.id, name: session.name, count: solves.length },
+        ]}
         sessionId={session.id}
         onSessionChange={handleSessionChange}
         theme={theme}
@@ -115,18 +251,30 @@ export default function TimerApp() {
       />
       <div className="border-b border-border bg-muted">
         <p className="mx-auto max-w-6xl px-4 py-2 text-sm text-muted-foreground sm:px-6">
-          Prototype build — sample data only. The timer, saving, and live
-          scramble generation are not active yet.
+          Timer and scrambles are live. Solves stay in memory only — refreshing
+          loses them until local saving ships.
         </p>
       </div>
       <main className="mx-auto w-full max-w-6xl flex-1 space-y-4 px-4 py-6 sm:space-y-6 sm:px-6">
         <div className="grid gap-4 lg:grid-cols-2 sm:gap-6">
-          <TimerCard ao5={ao5} />
+          <TimerCard
+            engine={timer.engine}
+            phase={phase}
+            ao5={ao5}
+            pendingSolve={pendingSolve}
+            onToggle={timer.toggle}
+            onSetPenalty={handleSetPenalty}
+          />
           <ScramblePanel
             puzzleId={puzzleId}
             puzzleLabel={puzzleLabel(puzzleId)}
-            scramble={scramble}
-            onNewScramble={() => setScrambleIndex((index) => index + 1)}
+            scramble={scrambleState.scramble}
+            status={scrambleState.status}
+            newScrambleDisabled={
+              scrambleState.status === "generating" ||
+              (phase !== "idle" && phase !== "stopped")
+            }
+            onNewScramble={handleNewScramble}
           />
         </div>
         <div className="grid items-start gap-4 lg:grid-cols-2 sm:gap-6">
@@ -140,6 +288,10 @@ export default function TimerApp() {
       </main>
       <footer className="border-t border-border px-4 py-4 sm:px-6">
         <p className="mx-auto max-w-6xl text-sm text-muted-foreground">
+          Shortcuts: Space start/stop · N new scramble · D toggle DNF on the
+          last solve · Esc cancel ready state.
+        </p>
+        <p className="mx-auto mt-1 max-w-6xl text-sm text-muted-foreground">
           Data is stored only in this browser — it is never synced. Clearing
           site data removes it.
         </p>

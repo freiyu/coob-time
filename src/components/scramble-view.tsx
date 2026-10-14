@@ -3,21 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { RefreshCw } from "lucide-react";
 import type { ScrambleDisplay as ScrambleDisplayElement } from "scramble-display";
-import type { PuzzleId } from "@/lib/sample-data";
-
-// WCA event IDs accepted by <scramble-display> (same ids as the Phase 2 spike).
-const EVENT_IDS: Record<PuzzleId, string> = {
-  "2x2": "222",
-  "3x3": "333",
-  "4x4": "444",
-  "5x5": "555",
-  "6x6": "666",
-  "7x7": "777",
-  megaminx: "minx",
-  "square-1": "sq1",
-  pyraminx: "pyram",
-  skewb: "skewb",
-};
+import type { PuzzleId } from "@/lib/puzzles";
+import { EVENT_IDS } from "@/lib/scrambles/events";
 
 interface ScrambleViewProps {
   puzzleId: PuzzleId;

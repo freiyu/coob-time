@@ -1,4 +1,5 @@
 import { Award } from "lucide-react";
+import type { SolveRecord } from "@/lib/storage/types";
 import {
   aoN,
   bestAoN,
@@ -6,11 +7,10 @@ import {
   effectiveMs,
   formatMs,
   mean,
-  type Solve,
-} from "@/lib/sample-data";
+} from "@/lib/statistics";
 
 interface StatisticsProps {
-  solves: Solve[];
+  solves: SolveRecord[];
 }
 
 interface StatCardProps {
@@ -42,9 +42,9 @@ function notEnough(): { value: string; sub: string } {
   return { value: "—", sub: "Not enough solves" };
 }
 
-function TrendChart({ solves }: { solves: Solve[] }) {
+function TrendChart({ solves }: { solves: SolveRecord[] }) {
   const points = solves
-    .map((solve) => ({ number: solve.number, ms: effectiveMs(solve) }))
+    .map((solve, index) => ({ number: index + 1, ms: effectiveMs(solve) }))
     .filter((point): point is { number: number; ms: number } => point.ms !== null);
 
   if (points.length < 2) {

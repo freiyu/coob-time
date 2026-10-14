@@ -1,9 +1,11 @@
+export type Penalty = "none" | "plus2" | "dnf";
+
 export interface SolveRecord {
   id: string;
   sessionId: string;
   puzzleId: string;
   rawTimeMs: number;
-  penalty: "none" | "plus2" | "dnf";
+  penalty: Penalty;
   scramble: string;
   createdAt: string;
   source: "timer" | "manual" | "imported";

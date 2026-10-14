@@ -9,7 +9,12 @@ export type TimerPhase =
 
 export interface TimerEngine {
   readonly phase: TimerPhase;
+  readonly holdToReady: boolean;
   start(): void;
-  stop(): void;
+  stop(): number | null;
+  arm(): void;
+  release(): void;
+  cancel(): void;
+  elapsedMs(): number;
   subscribe(listener: (phase: TimerPhase) => void): () => void;
 }

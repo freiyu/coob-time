@@ -1,8 +1,9 @@
 import { Award } from "lucide-react";
-import { effectiveMs, formatMs, type Solve } from "@/lib/sample-data";
+import type { SolveRecord } from "@/lib/storage/types";
+import { effectiveMs, formatMs } from "@/lib/statistics";
 
 interface SolveHistoryProps {
-  solves: Solve[];
+  solves: SolveRecord[];
   sessionName: string;
   pbMs: number | null;
 }
@@ -12,7 +13,9 @@ export default function SolveHistory({
   sessionName,
   pbMs,
 }: SolveHistoryProps) {
-  const rows = [...solves].reverse();
+  const rows = solves
+    .map((solve, index) => ({ solve, number: index + 1 }))
+    .reverse();
 
   return (
     <section
@@ -30,8 +33,8 @@ export default function SolveHistory({
         <div className="px-4 py-10 text-center sm:px-6">
           <p className="text-sm font-medium">No solves yet</p>
           <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
-            Sample data is loaded for 3×3×3 only. Your own solves will be saved
-            in this browser alone, never synced.
+            Stop the timer to record your first solve. Data lives only in this
+            browser.
           </p>
         </div>
       ) : (
@@ -50,7 +53,7 @@ export default function SolveHistory({
             </tr>
           </thead>
           <tbody>
-            {rows.map((solve) => {
+            {rows.map(({ solve, number }) => {
               const effective = effectiveMs(solve);
               const isPb =
                 solves.length > 1 &&
@@ -63,7 +66,7 @@ export default function SolveHistory({
                   className="border-b border-border last:border-b-0"
                 >
                   <td className="px-4 py-2.5 text-muted-foreground sm:px-6">
-                    #{solve.number}
+                    #{number}
                   </td>
                   <td className="px-2 py-2.5 text-right font-semibold tabular-nums">
                     {effective === null ? (

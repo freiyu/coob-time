@@ -13,6 +13,7 @@ import type { ScrambleResult } from "@/lib/scrambles/types";
 import { aoN, bestSingle } from "@/lib/statistics";
 import {
   DEFAULT_SETTINGS,
+  deleteSession as deleteSessionRecord,
   deleteSolve as deleteSolveRecord,
   getSettings,
   listSessions,
@@ -413,6 +414,41 @@ export default function TimerApp() {
     putSession(record).catch(persistFailure);
   };
 
+  const handleRenameSession = (name: string) => {
+    const now = new Date().toISOString();
+    const record = toSessionRecord({ ...session, name, updatedAt: now });
+    setSessions((prev) =>
+      prev.map((candidate) =>
+        candidate.id === session.id
+          ? { ...candidate, name, updatedAt: now }
+          : candidate,
+      ),
+    );
+    setSaveState("saving");
+    putSession(record)
+      .then(() => {
+        setSaveState("saved");
+        setSaveNotice(null);
+      })
+      .catch(persistFailure);
+  };
+
+  const handleDeleteSession = () => {
+    if (phase !== "idle" && phase !== "stopped") return;
+    const remaining = sessions.filter(
+      (candidate) =>
+        candidate.puzzleId === puzzleId && candidate.id !== session.id,
+    );
+    if (remaining.length === 0) return;
+    setSessions((prev) =>
+      prev.filter((candidate) => candidate.id !== session.id),
+    );
+    setSessionId(remaining[0].id);
+    setSaveState(null);
+    setSaveNotice(null);
+    deleteSessionRecord(session.id).catch(persistFailure);
+  };
+
   const pendingSolve =
     phase === "stopped" ? (solves.at(-1) ?? null) : null;
   const ao5 = aoN(solves, 5);
@@ -449,6 +485,8 @@ export default function TimerApp() {
           sessionId={session.id}
           onSessionChange={handleSessionChange}
           onNewSession={handleNewSession}
+          onRenameSession={handleRenameSession}
+          onDeleteSession={handleDeleteSession}
           theme={theme}
           onThemeChange={writeTheme}
           selectionLocked={phase !== "idle" && phase !== "stopped"}

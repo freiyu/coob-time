@@ -93,6 +93,17 @@ export async function deleteSolve(id: string): Promise<void> {
   await db.delete("solves", id);
 }
 
+export async function deleteSession(id: string): Promise<void> {
+  const db = await cubetimeDb();
+  const tx = db.transaction(["sessions", "solves"], "readwrite");
+  const solveKeys = await tx.objectStore("solves").index("sessionId").getAllKeys(id);
+  await Promise.all([
+    ...solveKeys.map((key) => tx.objectStore("solves").delete(key)),
+    tx.objectStore("sessions").delete(id),
+    tx.done,
+  ]);
+}
+
 export async function getSettings(): Promise<SettingsRecord | null> {
   const db = await cubetimeDb();
   return (await db.get("settings", SETTINGS_KEY)) ?? null;

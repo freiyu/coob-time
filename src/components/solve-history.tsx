@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
-import { Award, Trash2, X } from "lucide-react";
+import { useState } from "react";
+import { Award, Trash2 } from "lucide-react";
+import Dialog from "@/components/dialog";
 import ScrambleView from "@/components/scramble-view";
 import { type PuzzleId } from "@/lib/puzzles";
 import type { Penalty, SolveRecord } from "@/lib/storage/types";
@@ -18,54 +19,6 @@ interface AoWindow {
   number: number;
   value: number;
   window: SolveRecord[];
-}
-
-function Dialog({
-  title,
-  onClose,
-  children,
-}: {
-  title: string;
-  onClose: () => void;
-  children: React.ReactNode;
-}) {
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <button
-        type="button"
-        aria-label="Close dialog"
-        onClick={onClose}
-        className="absolute inset-0 h-full w-full cursor-default bg-background/60"
-      />
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label={title}
-        className="relative w-full max-w-md rounded-[14px] border border-border bg-card shadow-lg"
-      >
-        <header className="flex items-center justify-between border-b border-border px-4 py-3">
-          <h3 className="text-sm font-semibold">{title}</h3>
-          <button
-            type="button"
-            aria-label="Close"
-            onClick={onClose}
-            className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <X aria-hidden className="size-4" />
-          </button>
-        </header>
-        {children}
-      </div>
-    </div>
-  );
 }
 
 function PenaltyButtons({
@@ -169,19 +122,34 @@ export default function SolveHistory({
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border text-sm font-medium text-muted-foreground">
-                <th scope="col" className="px-4 py-2.5 text-left sm:px-6">
+                <th
+                  scope="col"
+                  className="border-r border-border px-4 py-2.5 text-left sm:px-6"
+                >
                   Time
                 </th>
-                <th scope="col" className="px-2 py-2.5 text-right">
+                <th
+                  scope="col"
+                  className="border-r border-border bg-warning/40 px-3 py-2.5 text-right"
+                >
                   Ao5
                 </th>
-                <th scope="col" className="px-2 py-2.5 text-right">
+                <th
+                  scope="col"
+                  className="border-r border-border bg-chart-1/10 px-3 py-2.5 text-right"
+                >
                   Ao12
                 </th>
-                <th scope="col" className="px-2 py-2.5 text-right">
+                <th
+                  scope="col"
+                  className="border-r border-border px-3 py-2.5 text-right"
+                >
                   Status
                 </th>
-                <th scope="col" className="px-4 py-2.5 text-right sm:px-6">
+                <th
+                  scope="col"
+                  className="px-4 py-2.5 text-right sm:px-6"
+                >
                   <span className="sr-only">Actions</span>
                 </th>
               </tr>
@@ -198,19 +166,22 @@ export default function SolveHistory({
                   <tr
                     key={solve.id}
                     onClick={() => setDetailId(solve.id)}
-                    className="cursor-pointer border-b border-border transition-colors last:border-b-0 hover:bg-muted/50"
+                    className="cursor-pointer border-b border-border last:border-b-0"
                   >
-                    <td className="px-4 py-2.5 sm:px-6">
+                    <td className="border-r border-border px-4 py-2.5 sm:px-6">
                       <span className="text-muted-foreground">#{number} </span>
-                      <span className="font-semibold tabular-nums">
+                      <button
+                        type="button"
+                        className="rounded px-1 font-semibold tabular-nums hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      >
                         {effective === null ? (
                           <span className="text-muted-foreground">—</span>
                         ) : (
                           formatMs(effective)
                         )}
-                      </span>
+                      </button>
                     </td>
-                    <td className="px-2 py-2.5 text-right tabular-nums">
+                    <td className="border-r border-border bg-warning/40 px-3 py-2.5 text-right tabular-nums">
                       {ao5 === null ? (
                         <span className="text-muted-foreground">—</span>
                       ) : (
@@ -231,7 +202,7 @@ export default function SolveHistory({
                         </button>
                       )}
                     </td>
-                    <td className="px-2 py-2.5 text-right tabular-nums">
+                    <td className="border-r border-border bg-chart-1/10 px-3 py-2.5 text-right tabular-nums">
                       {ao12 === null ? (
                         <span className="text-muted-foreground">—</span>
                       ) : (
@@ -253,7 +224,7 @@ export default function SolveHistory({
                       )}
                     </td>
                     <td
-                      className="px-2 py-2.5 text-right"
+                      className="border-r border-border px-3 py-2.5 text-right"
                       onClick={(event) => event.stopPropagation()}
                     >
                       <span className="inline-flex items-center gap-1">
@@ -389,9 +360,6 @@ export default function SolveHistory({
                 );
               })}
             </div>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Oldest to newest; the highlighted time is this solve.
-            </p>
           </div>
         </Dialog>
       )}

@@ -1,6 +1,8 @@
 "use client";
 
-import { Box, Monitor, Moon, Sun } from "lucide-react";
+import { useState } from "react";
+import { Box, Monitor, Moon, Pencil, Plus, Sun, Trash2 } from "lucide-react";
+import Dialog from "@/components/dialog";
 import Menu, { type MenuItem } from "@/components/menu";
 import { PUZZLES, type Puzzle, type PuzzleId } from "@/lib/puzzles";
 
@@ -19,6 +21,8 @@ interface TopBarProps {
   sessionId: string;
   onSessionChange: (sessionId: string) => void;
   onNewSession: () => void;
+  onRenameSession: (name: string) => void;
+  onDeleteSession: () => void;
   theme: ThemeChoice;
   onThemeChange: (theme: ThemeChoice) => void;
   selectionLocked: boolean;
@@ -37,10 +41,18 @@ export default function TopBar({
   sessionId,
   onSessionChange,
   onNewSession,
+  onRenameSession,
+  onDeleteSession,
   theme,
   onThemeChange,
   selectionLocked,
 }: TopBarProps) {
+  const [dialog, setDialog] = useState<"rename" | "delete" | null>(null);
+  const [draftName, setDraftName] = useState("");
+
+  const activeSession = sessions.find((session) => session.id === sessionId);
+  const canDeleteSession = sessions.length > 1;
+
   const puzzleItems: MenuItem[] = PUZZLES.map((puzzle: Puzzle) => ({
     label: puzzle.label,
     value: puzzle.id,
@@ -58,8 +70,26 @@ export default function TopBar({
     {
       label: "+ New session",
       value: "new-session",
+      icon: <Plus aria-hidden className="size-4" />,
       disabled: selectionLocked,
       onSelect: onNewSession,
+    },
+    {
+      label: "Rename session",
+      value: "rename-session",
+      icon: <Pencil aria-hidden className="size-4" />,
+      disabled: selectionLocked,
+      onSelect: () => {
+        setDraftName(activeSession?.name ?? "");
+        setDialog("rename");
+      },
+    },
+    {
+      label: "Delete session",
+      value: "delete-session",
+      icon: <Trash2 aria-hidden className="size-4" />,
+      disabled: selectionLocked || !canDeleteSession,
+      onSelect: () => setDialog("delete"),
     },
   ];
 
@@ -70,11 +100,11 @@ export default function TopBar({
     onSelect: () => onThemeChange(option.value),
   }));
 
-  const activeSession = sessions.find((session) => session.id === sessionId);
   const activeTheme = themeOptions.find((option) => option.value === theme);
 
   return (
-    <header className="border-b border-border">
+    <>
+      <header className="border-b border-border">
       <div className="mx-auto flex w-full max-w-6xl items-center gap-3 px-4 py-3 sm:px-6">
         <div className="flex flex-1 items-center gap-2">
           <Box aria-hidden className="size-5 text-brand-strong" />
@@ -106,5 +136,84 @@ export default function TopBar({
         </div>
       </div>
     </header>
+    {dialog === "rename" && activeSession && (
+        <Dialog
+          title="Rename session"
+          onClose={() => setDialog(null)}
+        >
+          <form
+            className="space-y-3 p-4"
+            onSubmit={(event) => {
+              event.preventDefault();
+              const name = draftName.trim();
+              if (!name) return;
+              onRenameSession(name);
+              setDialog(null);
+            }}
+          >
+            <label className="block text-sm font-medium">
+              Session name
+              <input
+                value={draftName}
+                onChange={(event) => setDraftName(event.target.value)}
+                autoFocus
+                maxLength={80}
+                className="mt-1.5 h-10 w-full rounded-lg border border-input bg-card px-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              />
+            </label>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setDialog(null)}
+                className="h-10 rounded-lg border border-border px-4 text-sm font-medium text-secondary-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={!draftName.trim()}
+                className="h-10 rounded-lg bg-brand px-4 text-sm font-medium text-white transition-colors duration-150 hover:bg-brand-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+              >
+                Save
+              </button>
+            </div>
+          </form>
+        </Dialog>
+      )}
+      {dialog === "delete" && activeSession && (
+        <Dialog
+          title="Delete session"
+          onClose={() => setDialog(null)}
+        >
+          <div className="space-y-3 p-4">
+            <p className="text-sm">
+              Delete <span className="font-semibold">{activeSession.name}</span>{" "}
+              and its {activeSession.count}{" "}
+              {activeSession.count === 1 ? "solve" : "solves"}? This cannot be
+              undone.
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setDialog(null)}
+                className="h-10 rounded-lg border border-border px-4 text-sm font-medium text-secondary-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  onDeleteSession();
+                  setDialog(null);
+                }}
+                className="h-10 rounded-lg bg-destructive px-4 text-sm font-medium text-destructive-foreground transition-colors duration-150 hover:bg-destructive/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </Dialog>
+      )}
+    </>
   );
 }

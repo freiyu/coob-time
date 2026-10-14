@@ -18,7 +18,8 @@ const importByPath = new Function("u", "return import(u)") as (
 async function loadScrambleModule(): Promise<ScrambleModule> {
   try {
     return await importByPath(BROWSER_ENTRY);
-  } catch {
+  } catch (copyError) {
+    console.error("[cubetime] static cubing copy failed to load:", copyError);
     return import("cubing/scramble");
   }
 }

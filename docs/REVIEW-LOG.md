@@ -36,9 +36,9 @@ Only the human supplies scores, satisfaction, bug notes, and the decision. Nobod
 - Anti-slop: NEEDS WORK — all findings fixed: truncated square-1 scramble regenerated; SVG font sizes 10→16; notice/footer text-xs→text-sm (14px floor); menu trigger aria-label removed (label-in-name); Sample badge → info tokens; copy-failure inline hint with next step; menu item radius/padding on 8px/4px scale; DNF duplicate removed.
 - Known left-outs: settings dialog, solve-row actions menu, keyboard shortcuts, empty-state gallery, tabs (two-column layout instead), test scripts.
 - Open decisions for human (defaults used): UI English, name CubeTime, license undecided (cubing.js GPL-3.0 relevant if repo public).
-- Scores (applicable categories): (blank — human fills per PRD Section 15)
-- Satisfied / Not satisfied:
-- Bug notes and requested revisions:
+- Scores (applicable categories): (none given — no per-category scores supplied)
+- Satisfied / Not satisfied: (not stated; approval given via "oke sip")
+- Bug notes and requested revisions: (none listed). Verbal request to continue: "lanjut bikinfrontend" → next phase is Phase 3 (Frontend).
 - Prompt used: PRD Section 14 Phase 2 prompt
-- Human decision: Approve / Revise / Reject
+- Human decision: Approve — 2026-10-14, quote: "oke sip, lanjut bikinfrontend"; tag phase-2-approved at 22a9cb2
 - Addendum (delta db456d8, 2026-10-13): scramble-view 3D visualization added at human's request — `src/components/scramble-view.tsx` (cubing@0.65.1 TwistyPlayer, 3D, no controls/links, dynamic import in useEffect with cleanup, aria-hidden, try/catch falls back to text scramble), wired into scramble-panel; `PuzzleId` union tightened across sample-data/timer-app/top-bar. Delta diff d9da605→db456d8 touches only scramble-view/scramble-panel/timer-app/top-bar/sample-data/package.json + lock + opencode.json (testsprite enable flags swept in, source unknown — flagged to human, not Phase 2 work). Checks re-run after delta: lint/typecheck/build all exit 0 (builder-run, tester-confirmed). Anti-slop scoped review: PASS after fixes (try/catch added; PuzzleId exhaustiveness enforced via `Record<Puzzle["id"], PuzzleID>`), 2 low findings fixed. Not verified: in-browser WebGL render (no Playwright browsers in WSL) — human must eyeball via `npm run dev`.

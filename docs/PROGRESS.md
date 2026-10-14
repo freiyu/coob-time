@@ -7,7 +7,7 @@ Section 14 wins.
 | Phase | Status | Approved tag | Last commit | Notes |
 |---|---|---|---|---|
 | 1 Validate and plan | Approved | — (verbal only, no tag created) | e4bc97c | Human said "oke sip lanjut prototype" |
-| 2 Prototype | Awaiting human check | — | db456d8 | Visual prototype + sample data + scramble-view addendum (3D TwistyPlayer, delta db456d8); lint/typecheck/build exit 0 after delta; browser WebGL render unverified — eyeball via `npm run dev`; not pushed |
+| 2 Prototype | Approved | phase-2-approved (22a9cb2) | 22a9cb2 | Human approved 2026-10-14: "oke sip, lanjut bikinfrontend". Tag covers commits through 22a9cb2 incl. scramble-display swap (46832f2) + layout tweak (b6aa1fc, 22a9cb2) landed after audit. Branch ahead 8, not pushed |
 | 3 Frontend | Not started | — | — | |
 | 4 Timer and scramble engine | Not started | — | — | |
 | 5 Local persistence and portability | Not started | — | — | |

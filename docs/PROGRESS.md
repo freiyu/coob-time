@@ -9,7 +9,7 @@ Section 14 wins.
 | 1 Validate and plan | Approved | — (verbal only, no tag created) | e4bc97c | Human said "oke sip lanjut prototype" |
 | 2 Prototype | Approved | phase-2-approved (22a9cb2) | 22a9cb2 | Human approved 2026-10-14: "oke sip, lanjut bikinfrontend". Tag covers commits through 22a9cb2 incl. scramble-display swap (46832f2) + layout tweak (b6aa1fc, 22a9cb2) landed after audit. Branch ahead 8, not pushed |
 | 3 Frontend | Approved | phase-3-approved (d4b5e64) | d4b5e64 | Human approved 2026-10-14: "oke sip karena ga banyak yang harus di tambah, jadi lanjut ke fase 4" (no scores given). Work: menu keyboard/roving focus, sole h1, scramble-failure retry, 14px text floor, type ports. Tag covers commits through d4b5e64. Branch ahead 11, not pushed |
-| 4 Timer and scramble engine | Not started | — | — | |
+| 4 Timer and scramble engine | Awaiting human check | — | 8c5a460 | Commits 2456603..8c5a460: timer engine (performance.now), keyboard/touch controls (Space/N/D; Esc wired for future hold-to-ready), live cubing.js scrambles (main thread), in-memory SolveRecords (sample data removed), +2/DNF on last stopped solve, vitest (16 tests incl. 10-puzzle generation). tester ×2 lint/typecheck/test/build pass; reviewer BLOCK (mid-solve puzzle switch) → FIXED; anti-slop NEEDS WORK → all fixed. Browser behavior still needs human eyeball. Branch ahead ~15, not pushed |
 | 5 Local persistence and portability | Not started | — | — | |
 | 6 Statistics and integration | Not started | — | — | |
 | 7 Verification and bug fixing | Not started | — | — | |

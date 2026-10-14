@@ -11,15 +11,18 @@ interface TimerCardProps {
   ao5: number | null;
   pendingSolve: SolveRecord | null;
   scrambleReady: boolean;
+  holdMode: boolean;
+  saveState: "saving" | "saved" | "failed" | null;
   onSetPenalty: (penalty: Penalty) => void;
 }
 
-const STATE_LABEL: Record<TimerPhase, string> = {
-  idle: "Hold Space to start",
+const STATE_LABEL: Record<
+  Exclude<TimerPhase, "idle" | "stopped">,
+  string
+> = {
   holding: "Hold…",
   ready: "Ready",
   running: "Running",
-  stopped: "Stopped — not saved yet",
   saving: "Saving…",
   saved: "Saved",
 };
@@ -30,6 +33,8 @@ export default function TimerCard({
   ao5,
   pendingSolve,
   scrambleReady,
+  holdMode,
+  saveState,
   onSetPenalty,
 }: TimerCardProps) {
   const [elapsed, setElapsed] = useState(0);
@@ -73,8 +78,21 @@ export default function TimerCard({
     digits = formatMs(elapsed);
   }
 
+  const idleCopy = holdMode ? "Hold Space to start" : "Press Space to start";
   const label =
-    phase === "idle" && !scrambleReady ? "Waiting for scramble…" : STATE_LABEL[phase];
+    phase === "idle"
+      ? scrambleReady
+        ? idleCopy
+        : "Waiting for scramble…"
+      : phase === "stopped"
+        ? saveState === "saving"
+          ? "Saving…"
+          : saveState === "saved"
+            ? "Saved"
+            : saveState === "failed"
+              ? "Stopped — not saved"
+              : "Stopped"
+        : STATE_LABEL[phase];
   const showPenalties = phase === "stopped" && pendingSolve !== null;
   const penaltyNote =
     phase === "stopped" && pendingSolve && pendingSolve.penalty !== "none"
@@ -118,9 +136,7 @@ export default function TimerCard({
             {digits}
           </span>
           {!focused && (
-            <span className={`text-sm font-medium ${stateColor}`}>
-              {phase === "idle" && scrambleReady ? "Hold Space to start" : label}
-            </span>
+            <span className={`text-sm font-medium ${stateColor}`}>{label}</span>
           )}
         </div>
         {showPenalties && pendingSolve && (

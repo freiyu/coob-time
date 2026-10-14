@@ -37,8 +37,7 @@ export default function SolveHistory({
         <div className="px-4 py-10 text-center sm:px-6">
           <p className="text-sm font-medium">No solves yet</p>
           <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
-            Stop the timer to record your first solve. Nothing is synced, and
-            saving to this browser arrives in a later phase.
+            Stop the timer to record your first solve. Nothing is synced.
           </p>
         </div>
       ) : (
@@ -111,7 +110,7 @@ export default function SolveHistory({
                             onDelete(solve.id);
                             setConfirmId(null);
                           }}
-                          className="rounded-lg bg-danger px-3 py-1.5 text-sm font-medium text-danger-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          className="rounded-lg bg-destructive px-3 py-1.5 text-sm font-medium text-destructive-foreground transition-colors duration-150 hover:bg-destructive/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         >
                           Delete
                         </button>

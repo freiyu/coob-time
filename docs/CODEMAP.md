@@ -1,29 +1,30 @@
 # CubeTime — Code Map
 <!-- Maintained by @context-keeper. Hard cap 200 lines. Facts only. Paths, not line numbers. -->
-Synced at: 5712654 | Phase: 4 committed @ 8c5a460 (docs @ 5712654), awaiting human check
+Synced at: 40973df | Phase: 4 approved (`phase-4-approved` @40973df, 2026-10-14), Phase 5 next (not started)
 
 ## 1. Quick facts
 - Stack: Next.js 16.4 App Router + Turbopack (cacheComponents, partialPrefetching), React 19.3, TypeScript strict, Tailwind CSS v4 via @tailwindcss/turbopack loader (tokens in src/app/globals.css, dark via `.dark` class), lucide-react icons, Geist fonts, cubing@0.65.1 + scramble-display@0.59.1, vitest@^5.0.4 + @types/node@^22 (dev).
-- Run: dev `npm run dev` | lint `npm run lint` | typecheck `npm run typecheck` | build `npm run build` | unit `npm run test` (`vitest run`; config vitest.config.mts — node env, `@`→src alias, includes `src/**/*.test.ts`) | e2e `npm run test:e2e` (script does not exist yet)
+- Run: dev `npm run dev` | lint `npm run lint` | typecheck `npm run typecheck` | build `npm run build` | unit `npm run test` (`vitest run` — 18 tests, 3 files (engine/keyboard/adapter); config vitest.config.mts — node env, `@`→src alias, includes `src/**/*.test.ts`) | e2e `npm run test:e2e` (script does not exist yet)
+- postinstall `scripts/copy-cubing.mjs`: copies cubing.js dist → `public/cubing/` (gitignored, eslint-ignored) + vendors `random-uint-below` → `public/cubing/vendor/`, rewriting 19 bare import specifiers (three/* untouched — only reached from 3D/Bluetooth chunks CubeTime never loads)
 - Env: none expected (the MVP needs no secrets)
 - No Zustand / idb / zod / playwright in package.json yet (later phases).
-- Tags: `phase-2-approved` @22a9cb2, `phase-3-approved` @d4b5e64 (verified via git log --decorate).
+- Tags: `phase-2-approved` @22a9cb2, `phase-3-approved` @d4b5e64, `phase-4-approved` @40973df (verified via git log --decorate).
 
 ## 2. Layout
 | Path | Responsibility |
 |---|---|
 | src/app | App Router shell: layout.tsx (fonts, metadata, pre-paint theme script), page.tsx (renders TimerApp), globals.css (Tailwind v4 tokens, `.dark` overrides), favicon |
-| src/components | Client UI: timer-app (client root, main = TimerCard+ScramblePanel grid then SolveHistory+Statistics grid: theme + real in-memory sessions/solves, scramble generation via `cubingScrambleProvider` with `generate`/`generateFresh`/`applyScrambleResult` + seq-guard, `selectionLocked` while timer active; HOLD_TO_READY=false const), top-bar (brand = page `<h1>`; `selectionLocked` disables non-active puzzle/session menu items), timer-card (client: rAF digit loop from engine, tap-to-start button, +2/DNF penalty toggles on last solve, `scrambleReady` gates start, sr-only aria-live label), scramble-panel (`status` ready/generating/error + retry copy, no sample badge), scramble-view (2D scramble-display, h-44/sm:h-52, visible load-failure fallback, uses shared EVENT_IDS), solve-history (SolveRecord, `number` derived from index), statistics (SolveRecord), menu (full keyboard nav + per-item `disabled`) |
+| src/components | Client UI: timer-app (client root, main = TimerCard+ScramblePanel grid then SolveHistory+Statistics grid: theme + real in-memory sessions/solves, scramble generation via `cubingScrambleProvider` with `generate`/`generateFresh`/`applyScrambleResult` + seq-guard, `selectionLocked` while timer active; HOLD_TO_READY=true; `handleDeleteSolve`; running focus mode — TopBar/banner/ScramblePanel/history/stats/footer wrappers get opacity-0 + pointer-events-none + aria-hidden + inert while phase==="running" (300ms fade), footer shortcut copy "Space hold, release to start, press to stop"), top-bar (brand = page `<h1>`; `selectionLocked` disables non-active puzzle/session menu items), timer-card (client: rAF digit loop from engine, plain div — mouse/tap does nothing, start/stop Space only (human override of FR-T04), hold state colors digits+label (holding=text-destructive, ready=text-brand-strong) + thin ring, running focus mode FLIP-translates card to viewport center (300ms, motion-reduce off) with label+Ao5 hidden, +2/DNF penalty toggles on last solve, `scrambleReady` gates start, sr-only aria-live label), scramble-panel (root `section` now h-full; `status` ready/generating/error + retry copy), scramble-view (2D scramble-display, h-44/sm:h-52, visible load-failure fallback, uses shared EVENT_IDS), solve-history (SolveRecord, `number` from index; Actions column: trash icon → inline two-step Delete/Confirm + Cancel, no modal/undo, `onDelete` prop, confirm state local), statistics (SolveRecord; StatCard PB badge on its own line below the time), menu (full keyboard nav + per-item `disabled`) |
 | src/lib | puzzles.ts (PuzzleId/PUZZLES/puzzleLabel — sample-data.ts DELETED), statistics.ts (SolveLike-based helpers), timer/ (types.ts, engine.ts + engine.test.ts, keyboard.ts + keyboard.test.ts, use-timer.ts), scrambles/ (types.ts, events.ts EVENT_IDS, adapter.ts cubingScrambleProvider + adapter.test.ts), storage/types.ts (type-only ports, Phase 5) |
-| docs | PRD_CUBETIME.md, DESIGN.md, PROGRESS.md, CODEMAP.md, REVIEW-LOG.md, PROMPTS.md, TESTING-PRD.md |
+| docs | PRD_CUBETIME.md, DESIGN.md (timer table updated: idle copy "Hold Space to start" — mouse/tap does nothing, holding/ready digits use state colors, running focus-mode rule added incl. explicit FR-T04 override), PROGRESS.md, CODEMAP.md, REVIEW-LOG.md, PROMPTS.md, TESTING-PRD.md |
 | .opencode/agents | Subagent definitions (context-keeper, project-manager, reviewer, tester, …) |
 | Root configs | package.json, tsconfig (strict, `@/*` → src/*), next.config.ts, eslint.config.mjs, README.md |
 
 ## 3. Modules and state (state: none / prototype / real)
 | Module | Location | Phase | State |
 |---|---|---|---|
-| Timer engine (performance.now) | src/lib/timer | 4 | REAL — `createTimerEngine` in src/lib/timer/engine.ts measures with `performance.now()` (HOLD_MS=300), 10 unit tests in engine.test.ts; `useTimer` hook wires Space/N/D/Escape via keyboard.ts (4 tests); UI wired in timer-card. Hold-to-ready phases are engine-tested but unreachable: `HOLD_TO_READY=false` in timer-app.tsx until the Phase 5 settings toggle |
-| Scramble adapter | src/lib/scrambles | 4 | REAL — `cubingScrambleProvider` (src/lib/scrambles/adapter.ts) calls `randomScrambleForEvent(EVENT_IDS[id])` on the main thread; adapter.test.ts generates a scramble for all 10 puzzles + checks successive 3x3 differ (Node evidence, see §5); browser-side generation runs in the live app but is not yet human-verified |
+| Timer engine (performance.now) | src/lib/timer | 4 | REAL — `createTimerEngine` in src/lib/timer/engine.ts measures with `performance.now()` (HOLD_MS=300), 10 unit tests in engine.test.ts; `useTimer` hook wires Space/N/D/Escape via keyboard.ts (4 tests); UI wired in timer-card. Hold-to-ready is LIVE (HOLD_TO_READY=true in timer-app.tsx; FR-T03; still a candidate for a Phase 5 settings toggle) |
+| Scramble adapter | src/lib/scrambles | 4 | REAL — `cubingScrambleProvider` (src/lib/scrambles/adapter.ts) calls `randomScrambleForEvent(EVENT_IDS[id])` on the main thread; adapter.test.ts generates a scramble for all 10 puzzles + checks successive 3x3 differ (Node evidence, see §5); browser-side generation human-verified in review 2 for the timer flows exercised (2026-10-14) |
 | Scramble view (2D) | src/components/scramble-view.tsx | 2 | prototype — scramble-display renders live scramble text; shared `EVENT_IDS` from src/lib/scrambles/events.ts (local map deleted); on load failure: visible `role="status"` message + "Try again" (attempt counter retriggers effect); sr-only status placeholder always mounted |
 | Statistics and penalties | src/lib/statistics | 6 | prototype — helpers moved to src/lib/statistics.ts (SolveLike = Pick<SolveRecord,"rawTimeMs"\|"penalty">; semantics unchanged); P6 still owns stats integration |
 | Storage (IndexedDB, repositories, migrations) | src/lib/storage | 5 | type-only ports in src/lib/storage/types.ts (Penalty/SolveRecord/SessionRecord/SettingsRecord/SolveRepository/SessionRepository); SolveRecord+Penalty are consumed as data shapes by timer-app/statistics/solve-history, but repositories have zero consumers; no IndexedDB — implementation Phase 5 |
@@ -44,27 +45,28 @@ Runtime helpers come from `src/lib/puzzles.ts`, `src/lib/statistics.ts`, `src/li
 - `aoN(solves, n)` — WCA-style average of the last n (drop floor(n/5) each end; DNF in window → null)
 - `bestAoN(solves, n)` — best aoN over all windows of size n
 - `createTimerEngine(options)` — `performance.now()` engine (start/stop/arm/release/cancel/elapsedMs/subscribe; holdToReady opt-in, HOLD_MS=300)
-- `useTimer(options)` — React hook: engine + phase state + Space/N/D/Escape handling (skips typing targets and open menus)
+- `useTimer(options)` — React hook: engine + phase state + Space/N/D/Escape handling (skips typing targets and open menus); Space keydown calls `preventDefault()` BEFORE the `event.repeat` guard (held Space no longer scrolls); other-key guards unchanged
 - `isTypingTarget(target)` / `isInsideMenu(target)` — keyboard guard predicates
 - `cubingScrambleProvider(puzzleId)` — async ScrambleProvider; cubing.js `randomScrambleForEvent` main-thread, returns ScrambleResult
 - `EVENT_IDS` — PuzzleId → WCA event id (shared by adapter and scramble-view)
+- UI prop changes (Phase 4 end): TimerCard no longer takes `onToggle` (start/stop is Space-only); SolveHistory takes `onDelete: (id: string) => void`. No new lib exports.
 
 ## 5. Puzzle × scramble verification matrix (PRD Section 4)
 Status is "verified" only when a test or a phase report proves it. Otherwise "unverified" or "unsupported".
-All rows: Node-side vitest `src/lib/scrambles/adapter.test.ts` (2026-10-14) generated a scramble for every puzzle via cubing@0.65.1 `randomScrambleForEvent`, plus a successive-3x3-differ check; browser-side generation runs in the app but is **unverified** (human check pending).
+All rows: Node-side vitest `src/lib/scrambles/adapter.test.ts` (2026-10-14) generated a scramble for every puzzle via cubing@0.65.1 `randomScrambleForEvent`, plus a successive-3x3-differ check; browser-side generation is human-verified for the timer flows exercised in human review 2 (2026-10-14) — generation for every puzzle in the browser is still unverified.
 The view renders with scramble-display@0.59.1 (cubing.org, GPL-3.0-or-later, wraps cubing/twisty; 2D default — 2D covers all 10 events while 3D lacks pyram/sq1); rendering is not evidence of generation.
 | Puzzle | Library function | Output style (WCA-style?) | Status | Notes |
 |---|---|---|---|---|
-| 2×2×2 | cubing@0.65.1 randomScrambleForEvent("222") | WCA-style | unverified | Node vitest passed; browser pending |
-| 3×3×3 | …("333") | WCA-style | unverified | Node vitest passed (+differ check); browser pending |
-| 4×4×4 | …("444") | WCA-style | unverified | Node vitest passed; browser pending |
-| 5×5×5 | …("555") | WCA-style | unverified | Node vitest passed; browser pending |
-| 6×6×6 | …("666") | WCA-style | unverified | Node vitest passed; browser pending |
-| 7×7×7 | …("777") | WCA-style | unverified | Node vitest passed; browser pending |
-| Megaminx | …("minx") | WCA-style (R-- D++ lines) | unverified | Node vitest passed; browser pending |
-| Square-1 | …("sq1") | WCA-style ((a, b) / …) | unverified | Node vitest passed; browser pending |
-| Pyraminx | …("pyram") | WCA-style (tips l/r/u included) | unverified | Node vitest passed; browser pending |
-| Skewb | …("skewb") | WCA-style | unverified | Node vitest passed; browser pending |
+| 2×2×2 | cubing@0.65.1 randomScrambleForEvent("222") | WCA-style | verified (flows) | Node vitest passed; browser: human-verified for exercised timer flows (review 2) |
+| 3×3×3 | …("333") | WCA-style | verified (flows) | Node vitest passed (+differ check); browser: human-verified for exercised timer flows (review 2) |
+| 4×4×4 | …("444") | WCA-style | verified (flows) | Node vitest passed; browser: human-verified for exercised timer flows (review 2) |
+| 5×5×5 | …("555") | WCA-style | verified (flows) | Node vitest passed; browser: human-verified for exercised timer flows (review 2) |
+| 6×6×6 | …("666") | WCA-style | verified (flows) | Node vitest passed; browser: human-verified for exercised timer flows (review 2) |
+| 7×7×7 | …("777") | WCA-style | verified (flows) | Node vitest passed; browser: human-verified for exercised timer flows (review 2) |
+| Megaminx | …("minx") | WCA-style (R-- D++ lines) | verified (flows) | Node vitest passed; browser: human-verified for exercised timer flows (review 2) |
+| Square-1 | …("sq1") | WCA-style ((a, b) / …) | verified (flows) | Node vitest passed; browser: human-verified for exercised timer flows (review 2) |
+| Pyraminx | …("pyram") | WCA-style (tips l/r/u included) | verified (flows) | Node vitest passed; browser: human-verified for exercised timer flows (review 2) |
+| Skewb | …("skewb") | WCA-style | verified (flows) | Node vitest passed; browser: human-verified for exercised timer flows (review 2) |
 
 ## 6. Storage
 - Database name and schema version: none — no IndexedDB code at all; sessions and solves live in React state in timer-app.tsx (in-memory only, lost on reload)
@@ -86,6 +88,9 @@ The view renders with scramble-display@0.59.1 (cubing.org, GPL-3.0-or-later, wra
 | Keyboard guards | src/lib/timer/keyboard.ts | `isTypingTarget` / `isInsideMenu` — skip shortcuts in inputs and open menus |
 | Scramble provider | src/lib/scrambles/adapter.ts | `cubingScrambleProvider(puzzleId)` — async, cubing.js main thread, returns ScrambleResult |
 | Event id map | src/lib/scrambles/events.ts | `EVENT_IDS` — PuzzleId → WCA event id (shared by adapter + scramble-view) |
+| Focus-mode fade | src/components/timer-app.tsx (`fadeCls`) | while phase==="running": `transition-opacity duration-300` + opacity-0/pointer-events-none toggle + aria-hidden + inert on every non-timer wrapper |
+| FLIP-to-center | src/components/timer-card.tsx | useLayoutEffect measure → getBoundingClientRect dx/dy → setFlip state → style transform (transition-transform 300ms, motion-reduce:transition-none) centers the timer card while running |
+| Danger vs destructive tokens | src/app/globals.css | GOTCHA: `--danger`/`--danger-foreground` is a BACKGROUND pair (light pale pink #fde3e1, dark maroon #3e1c1a) — never text-danger/ring-danger as foreground; use `text-destructive`/`ring-destructive` for red text (light #b42318, dark #f4a9a2). Badges correctly use bg-danger text-danger-foreground |
 | Icons | lucide-react | Used everywhere; aria-hidden on decorative icons |
 
 ## 8. Conventions and recipes
@@ -106,12 +111,15 @@ The view renders with scramble-display@0.59.1 (cubing.org, GPL-3.0-or-later, wra
 - Dev env: Linux Node 22 via nvm; node/npm/npx shims in ~/.local/bin (outside repo) so bare npm resolves to Linux Node, not Windows npm from /mnt/c.
 - Test runner: vitest@^5.0.4 + @types/node@^22 added in Phase 4 (`npm run test` → `vitest run`, config vitest.config.mts); `npm run test:e2e` script still does not exist (playwright not installed).
 - Timer shortcuts (PRD Section 5.7) land in use-timer.ts with guard predicates `isTypingTarget`/`isInsideMenu`; Space/N/D/Escape are ignored while typing or a menu is open. Puzzle/session selection is locked while a solve is running (`selectionLocked` in timer-app.tsx) so the scramble/puzzle can't change mid-solve.
-- Hold-to-ready: engine supports it but `HOLD_TO_READY=false` const in timer-app.tsx — unreachable until the Phase 5 settings toggle.
+- Hold-to-ready is LIVE in the UI: `HOLD_TO_READY=true` in timer-app.tsx (FR-T03, hold Space ≥300ms to arm) — still a candidate for a Phase 5 settings toggle (make configurable, default on).
+- Keyboard-only start/stop: human explicitly disabled click/tap start (timer-card is a plain div) — overrides PRD FR-T04 touch controls; flagged for Phase 7 PRD-verification.
+- Scramble generation browser bug FIXED (commits 40ef365..9b1ad93): root causes were (1) bundling broke cubing's search-worker sibling chunk paths, (2) bare specifier "random-uint-below" unresolvable in native browser ESM; fix = native ESM from public/cubing/ + vendored rewritten specifiers (scripts/copy-cubing.mjs); adapter logs "[cubetime] static cubing copy failed to load:" on fallback, panel shows real error text. Human later confirmed overall app functionality while exercising timer flows that require ready scrambles — browser-side generation working as of human review 2 (2026-10-14).
+- Penalty edits still last-solve-only (+2/DNF toggles on the last solve only); delete solve is new (inline two-step confirm in solve-history, no modal/undo).
 - Theme state in timer-app.tsx uses useSyncExternalStore over localStorage with a custom `cubetime-theme-change` event (no setState-in-effect; satisfies react-hooks/set-state-in-effect).
 - opencode.json testsprite flags are enabled (flipped in db456d8, origin unknown, committed as-is) — relevant only to later testsprite-runner phases.
 
 ## 10. Tech debt / TODO
-- Hold-to-ready is engine-tested but off: needs a Phase 5 settings toggle to flip `HOLD_TO_READY` in timer-app.tsx.
+- Hold-to-ready is engine-tested but ON: needs a Phase 5 settings toggle to make `HOLD_TO_READY` configurable (default on).
 - Timer save/saved UI states (PRD Section 5.x) land with persistence in Phase 5 — solves currently only live in memory.
 - Penalty edits only work on the last solve; editing older rows is Phase 5/6 work.
 - `npm run test:e2e` script does not exist yet (playwright not installed).

@@ -10,6 +10,7 @@ interface ScramblePanelProps {
   puzzleLabel: string;
   scramble: string;
   status: "ready" | "generating" | "error";
+  error?: string;
   newScrambleDisabled: boolean;
   onNewScramble: () => void;
 }
@@ -19,6 +20,7 @@ export default function ScramblePanel({
   puzzleLabel,
   scramble,
   status,
+  error,
   newScrambleDisabled,
   onNewScramble,
 }: ScramblePanelProps) {
@@ -97,6 +99,7 @@ export default function ScramblePanel({
       {status === "error" && (
         <p role="alert" className="mt-4 text-sm text-danger-foreground">
           Scramble generation failed. Use New Scramble to try again.
+          {error ? ` (${error})` : ""}
         </p>
       )}
       {scramble !== "" && (

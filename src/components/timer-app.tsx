@@ -30,6 +30,7 @@ interface Session {
 interface ScrambleState {
   status: "ready" | "generating" | "error";
   scramble: string;
+  error?: string;
 }
 
 function defaultSessionId(puzzleId: PuzzleId): string {
@@ -123,6 +124,7 @@ export default function TimerApp() {
         setScrambleState((state) => ({
           status: "error",
           scramble: state.scramble,
+          error: result.error,
         }));
       }
     },
@@ -273,6 +275,7 @@ export default function TimerApp() {
             puzzleLabel={puzzleLabel(puzzleId)}
             scramble={scrambleState.scramble}
             status={scrambleState.status}
+            error={scrambleState.error}
             newScrambleDisabled={
               scrambleState.status === "generating" ||
               (phase !== "idle" && phase !== "stopped")

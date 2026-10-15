@@ -7,8 +7,8 @@ import type {
 } from "./types";
 
 export const HOLD_MS = 300;
-// WCA: start after 15.00s = +2, after 17.00s = DNF (of the ready call;
-// here the inspection start plays the role of that call).
+// WCA A4d: a start at exactly 15.00s already earns +2, at 17.00s DNF
+// (of the ready call; here inspection start plays the role of that call).
 export const WCA_PLUS2_MS = 15_000;
 export const WCA_DNF_MS = 17_000;
 
@@ -59,9 +59,9 @@ export function createTimerEngine(
       const inspected = now() - inspStartTs;
       lastPenalty =
         inspectionMode === "wca"
-          ? inspected > WCA_DNF_MS
+          ? inspected >= WCA_DNF_MS
             ? "dnf"
-            : inspected > WCA_PLUS2_MS
+            : inspected >= WCA_PLUS2_MS
               ? "plus2"
               : "none"
           : "none";
@@ -104,7 +104,9 @@ export function createTimerEngine(
       return true;
     },
     inspectionElapsedMs() {
-      if (phase === "inspection" && inspStartTs !== null) {
+      // Live clock also while holding/ready from an inspection, so the
+      // +2/DNF cue never disappears at the moment the start is judged.
+      if (inspStartTs !== null && phase !== "running") {
         return now() - inspStartTs;
       }
       return 0;

@@ -32,7 +32,7 @@ export function cubetimeDb(): Promise<IDBPDatabase<CubetimeDB>> {
   if (dbPromise === null) {
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
     const opened = openDB<CubetimeDB>(DB_NAME, DB_VERSION, {
-      async upgrade(db, oldVersion) {
+      async upgrade(db, oldVersion, _newVersion, tx) {
         if (!db.objectStoreNames.contains("solves")) {
           const solves = db.createObjectStore("solves", { keyPath: "id" });
           solves.createIndex("sessionId", "sessionId");
@@ -45,13 +45,15 @@ export function cubetimeDb(): Promise<IDBPDatabase<CubetimeDB>> {
         }
         if (oldVersion < 2) {
           // v1 settings carried inspectionEnabled: boolean → inspectionMode.
-          const record = (await db.get("settings", SETTINGS_KEY)) as
+          // Must use the versionchange transaction's own store: DB-level
+          // helpers start a new transaction, which throws during upgrade.
+          const store = tx.objectStore("settings");
+          const record = (await store.get(SETTINGS_KEY)) as
             | (SettingsRecord & { inspectionEnabled?: boolean })
             | undefined;
           if (record && typeof record.inspectionEnabled === "boolean") {
             const { inspectionEnabled, ...rest } = record;
-            await db.put(
-              "settings",
+            await store.put(
               {
                 ...rest,
                 inspectionMode: inspectionEnabled ? "wca" : "off",

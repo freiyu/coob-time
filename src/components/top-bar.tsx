@@ -224,15 +224,16 @@ export default function TopBar({
               <kbd className={KBD_CLS}>D</kbd>
             </li>
             <li className="flex items-center justify-between gap-4">
-              <span>Cancel the ready state / close a popup</span>
+              <span>Cancel inspection / ready state, close a popup</span>
               <kbd className={KBD_CLS}>Esc</kbd>
             </li>
           </ul>
           <p className="border-t border-border px-4 py-3 text-sm text-muted-foreground">
-            In hold mode, press and hold Space until Ready, then release to
-            start. Shortcuts are ignored while typing in a field or while a
-            popup is open. +2 goes through the visible buttons in the history
-            or under the timer.
+            With inspection on, the first Space starts inspection; hold Space
+            during inspection to start the solve. In hold mode, press and hold
+            Space until Ready, then release to start. Shortcuts are ignored
+            while typing in a field or while a popup is open. +2 goes through
+            the visible buttons in the history or under the timer.
           </p>
         </Dialog>
       )}

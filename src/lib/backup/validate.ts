@@ -1,7 +1,9 @@
 import { z } from "zod";
 
 export const BACKUP_APP = "cubetime";
-export const BACKUP_SCHEMA_VERSION = 1;
+// v1: pre-inspection settings (inspectionEnabled boolean).
+// v2: settings.inspectionMode (off/15s/wca). Both are readable.
+export const BACKUP_SCHEMA_VERSION = 2;
 // ponytail: generous cap for a local timer's whole history; revisit if real
 // users approach it (bulk imports are the only path that hits this).
 const MAX_RECORDS = 100_000;
@@ -49,7 +51,7 @@ const settingsSchema = z
 
 const backupSchema = z.object({
   app: z.literal(BACKUP_APP),
-  schemaVersion: z.literal(BACKUP_SCHEMA_VERSION),
+  schemaVersion: z.union([z.literal(1), z.literal(BACKUP_SCHEMA_VERSION)]),
   exportedAt: isoDate,
   sessions: z.array(sessionSchema).max(MAX_RECORDS),
   solves: z.array(solveSchema).max(MAX_RECORDS),

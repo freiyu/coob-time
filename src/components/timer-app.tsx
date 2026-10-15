@@ -36,15 +36,17 @@ const THEME_EVENT = "cubetime-theme-change";
 
 // Short confirmation beep for a recorded solve (settings.soundEnabled).
 // Runs only from a key handler, so the AudioContext has a user gesture.
+let audioCtx: AudioContext | null = null;
 function playBeep() {
   try {
-    const ctx = new AudioContext();
+    audioCtx ??= new AudioContext();
+    const ctx = audioCtx;
+    if (ctx.state === "suspended") void ctx.resume();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.frequency.value = 880;
     gain.gain.value = 0.08;
     osc.connect(gain).connect(ctx.destination);
-    osc.onended = () => void ctx.close();
     osc.start();
     osc.stop(ctx.currentTime + 0.09);
   } catch {

@@ -12,7 +12,7 @@ Dark mode keeps the same two hues in soft pastel tones so it stays elegant and e
 ## Principles
 1. The timer comes first. Nothing on the screen competes with it while a solve is running.
 2. **Blue means "you can act on this"** (buttons, links, focus, selected controls).
-   **Green means identity and "good"** (brand mark, ready, saved, personal best, main chart series).
+   **Green means identity and "good"** (brand mark, ready, saved, main chart series).
    Never use green for something clickable and never use blue for a state.
 3. Neutrals carry the layout. Color is used sparingly and always with a reason.
 4. Borders and spacing for structure. Shadows only for overlays (menus, dialogs, popovers).
@@ -24,10 +24,11 @@ Dark mode keeps the same two hues in soft pastel tones so it stays elegant and e
 | Role | Use |
 |---|---|
 | Primary (blue) | Primary buttons, links, focus ring, selected controls, info |
-| Brand (green) | Logo mark, Ready state, Saved, personal best, chart series 2 |
+| Brand (green) | Logo mark, Ready state, Saved, chart series 2 |
 | Neutral | Backgrounds, surfaces, borders, text (slightly green-tinted gray) |
 | Warning (amber) | +2 penalty, "not enough data" hints |
 | Danger (red) | Holding (not ready yet), DNF, errors, destructive actions |
+| pb (red / orange) | Personal best: fastest time text + PB text-and-icon marker (`text-pb-foreground`) |
 
 Large areas stay neutral. Do not flood pages with green or blue fills.
 

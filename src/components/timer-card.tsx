@@ -46,6 +46,7 @@ export default function TimerCard({
   onSetPenalty,
 }: TimerCardProps) {
   const [elapsed, setElapsed] = useState(0);
+  const [insp, setInsp] = useState(0);
   const focused = phase === "running";
   const cardRef = useRef<HTMLElement>(null);
   const [flip, setFlip] = useState<{ dx: number; dy: number } | null>(null);
@@ -65,20 +66,29 @@ export default function TimerCard({
   }, [focused]);
 
   useEffect(() => {
-    if (phase !== "running" && phase !== "inspection") {
+    const live =
+      phase === "running" ||
+      phase === "inspection" ||
+      phase === "holding" ||
+      phase === "ready";
+    if (!live) {
       setElapsed(engine.elapsedMs());
+      setInsp(engine.inspectionElapsedMs());
       return;
     }
     let frame = requestAnimationFrame(function tick() {
-      setElapsed(
-        phase === "inspection"
-          ? engine.inspectionElapsedMs()
-          : engine.elapsedMs(),
-      );
+      setElapsed(engine.elapsedMs());
+      setInsp(engine.inspectionElapsedMs());
       frame = requestAnimationFrame(tick);
     });
     return () => cancelAnimationFrame(frame);
   }, [phase, engine]);
+
+  // The inspection clock keeps ticking through the hold, so the +2/DNF cue
+  // is still visible when the start actually gets judged.
+  const showInspection =
+    phase === "inspection" ||
+    ((phase === "holding" || phase === "ready") && insp > 0);
 
   let digits: string;
   if (phase === "stopped") {
@@ -86,49 +96,56 @@ export default function TimerCard({
       ? pendingSolve.penalty === "dnf"
         ? "DNF"
         : formatMs(effectiveMs(pendingSolve) ?? pendingSolve.rawTimeMs)
-      : "0.00";
+      : "—";
+  } else if (showInspection) {
+    digits = formatMs(insp);
   } else {
     digits = formatMs(elapsed);
   }
 
-  const idleCopy = holdMode ? "Hold Space to start" : "Press Space to start";
+  const idleCopy =
+    inspectionMode !== "off"
+      ? holdMode
+        ? "Hold Space to inspect"
+        : "Press Space to inspect"
+      : holdMode
+        ? "Hold Space to start"
+        : "Press Space to start";
   // Inspection stays count-up; WCA turns orange at 15s and red at 17s,
-  // the 15s mode only warns (no penalties).
+  // the 15s mode only warns (no penalties). WCA A4d: 15.00 itself is +2.
   const inspectionCue =
-    inspectionMode === "wca" && elapsed > 17_000
+    inspectionMode === "wca" && insp >= 17_000
       ? "Start now = DNF"
-      : inspectionMode === "wca" && elapsed > 15_000
+      : inspectionMode === "wca" && insp >= 15_000
         ? "Start now = +2"
-        : elapsed > 15_000
+        : insp >= 15_000
           ? "15s up — start whenever"
           : `Inspection — ${holdMode ? "hold" : "press"} Space`;
-  const inspectionDanger = inspectionMode === "wca" && elapsed > 17_000;
+  const inspectionDanger = inspectionMode === "wca" && insp >= 17_000;
   const inspectionWarn =
-    elapsed > 15_000 && (inspectionMode === "wca" || inspectionMode === "15s");
+    insp >= 15_000 && (inspectionMode === "wca" || inspectionMode === "15s");
 
-  const label =
-    phase === "idle"
+  const label = showInspection
+    ? inspectionCue
+    : phase === "idle"
       ? scrambleReady
         ? idleCopy
         : "Waiting for scramble…"
-      : phase === "inspection"
-        ? inspectionCue
-        : phase === "stopped"
-          ? saveState === "saving"
-            ? "Saving…"
-            : saveState === "saved"
-              ? "Saved"
-              : saveState === "failed"
-                ? "Stopped — not saved"
-                : "Stopped"
-          : STATE_LABEL[phase];
+      : phase === "stopped"
+        ? saveState === "saving"
+          ? "Saving…"
+          : saveState === "saved"
+            ? "Saved"
+            : saveState === "failed"
+              ? "Stopped — not saved"
+              : "Stopped"
+        : STATE_LABEL[phase];
   const showPenalties = phase === "stopped" && pendingSolve !== null;
   const penaltyNote =
     phase === "stopped" && pendingSolve && pendingSolve.penalty !== "none"
       ? ` ${pendingSolve.penalty === "plus2" ? "+2 applied" : "DNF applied"}`
       : "";
-  const inspectionActive = phase === "inspection";
-  const digitColor = inspectionActive
+  const digitColor = showInspection
     ? inspectionDanger
       ? "text-destructive"
       : inspectionWarn
@@ -139,7 +156,7 @@ export default function TimerCard({
       : phase === "ready"
         ? "text-brand-strong"
         : "text-foreground";
-  const stateColor = inspectionActive
+  const stateColor = showInspection
     ? inspectionDanger
       ? "text-destructive"
       : inspectionWarn
@@ -151,7 +168,7 @@ export default function TimerCard({
         ? "text-brand-strong"
         : "text-muted-foreground";
   const ringCls =
-    inspectionActive && inspectionDanger
+    showInspection && inspectionDanger
       ? "ring-1 ring-destructive"
       : phase === "holding"
         ? "ring-1 ring-destructive"

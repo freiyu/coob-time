@@ -265,7 +265,8 @@ export default function DataPanel({
             ))}
           </fieldset>
 
-          <div className="space-y-1">
+          <fieldset className="space-y-1">
+            <legend className="text-sm font-medium">After each solve</legend>
             {(
               [
                 [
@@ -275,7 +276,7 @@ export default function DataPanel({
                 ],
                 [
                   "autoNextScramble",
-                  "New scramble automatically after each solve",
+                  "New scramble automatically",
                   settings?.autoNextScramble !== false,
                 ],
               ] as const
@@ -296,7 +297,7 @@ export default function DataPanel({
                 {label}
               </label>
             ))}
-          </div>
+          </fieldset>
 
           <label className="block space-y-1.5">
             <span className="text-sm font-medium">Default puzzle</span>

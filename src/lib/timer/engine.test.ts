@@ -139,31 +139,41 @@ describe("inspection", () => {
     expect(engine.phase).toBe("stopped");
   });
 
-  it("wca: start inside 15s has no penalty", () => {
+  it("wca: start before 15s has no penalty", () => {
     const engine = createTimerEngine();
     engine.setInspection("wca");
     engine.startInspection();
-    now += 15_000;
+    now += 14_999;
     engine.start();
     now += 1_234;
     expect(engine.stop()).toEqual({ rawTimeMs: 1_234, penalty: "none" });
   });
 
-  it("wca: start after 15s and up to 17s is +2", () => {
+  it("wca: start at exactly 15.000s is +2 (WCA A4d)", () => {
     const engine = createTimerEngine();
     engine.setInspection("wca");
     engine.startInspection();
-    now += 15_001;
+    now += 15_000;
     engine.start();
     now += 1_000;
     expect(engine.stop()).toEqual({ rawTimeMs: 1_000, penalty: "plus2" });
   });
 
-  it("wca: start after 17s is DNF", () => {
+  it("wca: start at 16.999s is still +2", () => {
     const engine = createTimerEngine();
     engine.setInspection("wca");
     engine.startInspection();
-    now += 17_001;
+    now += 16_999;
+    engine.start();
+    now += 1_000;
+    expect(engine.stop()).toEqual({ rawTimeMs: 1_000, penalty: "plus2" });
+  });
+
+  it("wca: start at exactly 17.000s is DNF", () => {
+    const engine = createTimerEngine();
+    engine.setInspection("wca");
+    engine.startInspection();
+    now += 17_000;
     engine.start();
     now += 1_000;
     expect(engine.stop()).toEqual({ rawTimeMs: 1_000, penalty: "dnf" });

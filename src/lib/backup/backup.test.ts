@@ -50,7 +50,7 @@ describe("parseBackup", () => {
   });
 
   it("rejects backups from a newer schema version with a clear message", () => {
-    const result = parseBackup({ ...backup(), schemaVersion: 2 });
+    const result = parseBackup({ ...backup(), schemaVersion: 3 });
     expect(result).toMatchObject({ ok: false });
     if (!result.ok) expect(result.error).toContain("newer version");
   });
@@ -64,6 +64,7 @@ describe("parseBackup", () => {
 
   it("accepts a legacy v1 backup and maps inspectionEnabled to inspectionMode", () => {
     const legacy = structuredClone(backup()) as Record<string, unknown>;
+    legacy.schemaVersion = 1; // files exported before this change
     const settings = legacy.settings as Record<string, unknown>;
     delete settings.inspectionMode;
     settings.inspectionEnabled = true;

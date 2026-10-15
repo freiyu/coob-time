@@ -59,9 +59,11 @@ export function useTimer(options: UseTimerOptions) {
         event.preventDefault();
         if (event.repeat) return;
         // First Space from idle/stopped enters inspection (when enabled);
-        // the next hold/press is the actual solve start.
+        // the next hold/press is the actual solve start. Gated by canStart
+        // so a broken scramble can't park the user in inspection.
         if (
           (engine.phase === "idle" || engine.phase === "stopped") &&
+          canStartRef.current() &&
           engine.startInspection()
         ) {
           return;

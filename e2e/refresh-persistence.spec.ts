@@ -1,8 +1,13 @@
 import { expect, test, type Page } from "@playwright/test";
 
+async function openDataPanel(page: Page) {
+  await page.getByRole("button", { name: "Open data and settings" }).click();
+  return page.getByLabel("Data and settings");
+}
+
 async function gotoWithFreshLocalData(page: Page) {
   await page.goto("/");
-  const panel = page.getByLabel("Data and settings");
+  const panel = await openDataPanel(page);
   await expect(panel.getByText("solves stored in this browser")).toBeVisible({
     timeout: 60_000,
   });
@@ -17,6 +22,7 @@ async function gotoWithFreshLocalData(page: Page) {
     await panel.getByRole("button", { name: "Delete everything" }).click();
     await expect(panel.getByText("0 solves stored in this browser")).toBeVisible();
   }
+  await page.keyboard.press("Escape");
   await expect(
     page.getByLabel("Timer").getByText("Hold Space to start").first(),
   ).toBeVisible({ timeout: 60_000 });
@@ -45,8 +51,9 @@ test("a completed solve survives a page reload", async ({ page }) => {
 
 test("start mode setting persists across reload", async ({ page }) => {
   await gotoWithFreshLocalData(page);
-  const panel = page.getByLabel("Data and settings");
+  const panel = await openDataPanel(page);
   await panel.getByText("Press Space to start").click();
+  await page.keyboard.press("Escape");
   await expect(
     page.getByLabel("Timer").getByText("Press Space to start").first(),
   ).toBeVisible();
@@ -62,7 +69,7 @@ test("export, delete all, and merge-import restore the data", async ({
 }) => {
   await gotoWithFreshLocalData(page);
   await completeOneSolve(page);
-  const panel = page.getByLabel("Data and settings");
+  const panel = await openDataPanel(page);
 
   const downloadPromise = page.waitForEvent("download");
   await panel.getByRole("button", { name: "Export backup (JSON)" }).click();

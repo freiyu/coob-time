@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Box, Monitor, Moon, Pencil, Plus, Sun, Trash2 } from "lucide-react";
+import { Box, Monitor, Moon, Pencil, Plus, Settings, Sun, Trash2 } from "lucide-react";
 import Dialog from "@/components/dialog";
 import Menu, { type MenuItem } from "@/components/menu";
 import { PUZZLES, type Puzzle, type PuzzleId } from "@/lib/puzzles";
@@ -23,6 +23,7 @@ interface TopBarProps {
   onNewSession: () => void;
   onRenameSession: (name: string) => void;
   onDeleteSession: () => void;
+  onOpenDataPanel: () => void;
   theme: ThemeChoice;
   onThemeChange: (theme: ThemeChoice) => void;
   selectionLocked: boolean;
@@ -43,6 +44,7 @@ export default function TopBar({
   onNewSession,
   onRenameSession,
   onDeleteSession,
+  onOpenDataPanel,
   theme,
   onThemeChange,
   selectionLocked,
@@ -133,6 +135,14 @@ export default function TopBar({
             triggerIcon={activeTheme?.icon}
             align="right"
           />
+          <button
+            type="button"
+            aria-label="Open data and settings"
+            onClick={onOpenDataPanel}
+            className="flex h-10 w-10 items-center justify-center rounded-lg border border-input bg-card text-secondary-foreground transition-colors duration-150 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <Settings aria-hidden className="size-4" />
+          </button>
         </div>
       </div>
     </header>

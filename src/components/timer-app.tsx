@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import DataPanel from "@/components/data-panel";
+import Dialog from "@/components/dialog";
 import ScramblePanel from "@/components/scramble-panel";
 import SolveHistory from "@/components/solve-history";
 import Statistics from "@/components/statistics";
@@ -114,6 +115,7 @@ export default function TimerApp() {
   const [saveState, setSaveState] = useState<
     "saving" | "saved" | "failed" | null
   >(null);
+  const [dataPanelOpen, setDataPanelOpen] = useState(false);
   const hydratedOnceRef = useRef(false);
   const [scrambleState, setScrambleState] = useState<ScrambleState>({
     status: "generating",
@@ -461,8 +463,8 @@ export default function TimerApp() {
   }`;
 
   return (
-    <>
-      <div className={fadeCls} aria-hidden={focused} inert={focused}>
+    <div className="flex h-full flex-col overflow-hidden">
+      <div className={`shrink-0 ${fadeCls}`} aria-hidden={focused} inert={focused}>
         <TopBar
           puzzleId={puzzleId}
           onPuzzleChange={handlePuzzleChange}
@@ -487,13 +489,14 @@ export default function TimerApp() {
           onNewSession={handleNewSession}
           onRenameSession={handleRenameSession}
           onDeleteSession={handleDeleteSession}
+          onOpenDataPanel={() => setDataPanelOpen(true)}
           theme={theme}
           onThemeChange={writeTheme}
           selectionLocked={phase !== "idle" && phase !== "stopped"}
         />
       </div>
       <div
-        className={`border-b border-border ${storageError ? "bg-danger" : "bg-muted"} ${fadeCls}`}
+        className={`shrink-0 border-b border-border ${storageError ? "bg-danger" : "bg-muted"} ${fadeCls}`}
         aria-hidden={focused}
         inert={focused}
       >
@@ -513,7 +516,7 @@ export default function TimerApp() {
         </p>
       </div>
       {saveNotice && (
-        <div className="border-b border-border bg-danger">
+        <div className="shrink-0 border-b border-border bg-danger">
           <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2 sm:px-6">
             <p role="alert" className="text-sm text-danger-foreground">
               {saveNotice}
@@ -528,8 +531,8 @@ export default function TimerApp() {
           </div>
         </div>
       )}
-      <main className="mx-auto w-full max-w-6xl flex-1 space-y-4 px-4 py-6 sm:space-y-6 sm:px-6">
-        <div className="grid gap-4 lg:grid-cols-2 sm:gap-6">
+      <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-4 overflow-hidden px-4 py-4 sm:gap-6 sm:px-6">
+        <div className="grid shrink-0 gap-4 lg:grid-cols-2 sm:gap-6">
           <TimerCard
             engine={timer.engine}
             phase={phase}
@@ -558,7 +561,7 @@ export default function TimerApp() {
           </div>
         </div>
         <div
-          className={`grid items-start gap-4 lg:grid-cols-2 sm:gap-6 ${fadeCls}`}
+          className={`grid min-h-0 flex-1 items-start gap-4 overflow-y-auto lg:grid-cols-2 lg:items-stretch lg:overflow-hidden sm:gap-6 ${fadeCls}`}
           aria-hidden={focused}
           inert={focused}
         >
@@ -571,20 +574,9 @@ export default function TimerApp() {
           />
           <Statistics solves={solves} />
         </div>
-        <div className={fadeCls} aria-hidden={focused} inert={focused}>
-          <DataPanel
-            sessions={sessions.map(toSessionRecord)}
-            solves={sessions.flatMap((candidate) => candidate.solves)}
-            settings={settings}
-            storageOk={storageOk}
-            storageError={storageError}
-            onSettingsSaved={setSettings}
-            onLocalDataChanged={reloadStorage}
-          />
-        </div>
       </main>
       <footer
-        className={`border-t border-border px-4 py-4 sm:px-6 ${fadeCls}`}
+        className={`shrink-0 border-t border-border px-4 py-4 sm:px-6 ${fadeCls}`}
         aria-hidden={focused}
         inert={focused}
       >
@@ -594,6 +586,21 @@ export default function TimerApp() {
             : "Shortcuts: Space hold, release to start, press to stop · N new scramble · D toggle DNF on the last solve."}
         </p>
       </footer>
-    </>
+      {dataPanelOpen && (
+        <Dialog title="Data and settings" onClose={() => setDataPanelOpen(false)}>
+          <div className="max-h-[75vh] overflow-y-auto p-1">
+            <DataPanel
+              sessions={sessions.map(toSessionRecord)}
+              solves={sessions.flatMap((candidate) => candidate.solves)}
+              settings={settings}
+              storageOk={storageOk}
+              storageError={storageError}
+              onSettingsSaved={setSettings}
+              onLocalDataChanged={reloadStorage}
+            />
+          </div>
+        </Dialog>
+      )}
+    </div>
   );
 }

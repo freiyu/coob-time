@@ -495,26 +495,20 @@ export default function TimerApp() {
           selectionLocked={phase !== "idle" && phase !== "stopped"}
         />
       </div>
-      <div
-        className={`shrink-0 border-b border-border ${storageError ? "bg-danger" : "bg-muted"} ${fadeCls}`}
-        aria-hidden={focused}
-        inert={focused}
-      >
-        <p
-          className={
-            storageError
-              ? "mx-auto max-w-6xl px-4 py-2 text-sm text-danger-foreground sm:px-6"
-              : "mx-auto max-w-6xl px-4 py-2 text-sm text-muted-foreground sm:px-6"
-          }
-          role={storageError ? "alert" : undefined}
+      {storageError && (
+        <div
+          className={`shrink-0 border-b border-border bg-danger ${fadeCls}`}
+          aria-hidden={focused}
+          inert={focused}
         >
-          {storageOk
-            ? "Solves are saved in this browser only — not synced, not uploaded. Export backups from Data and settings below."
-            : storageError
-              ? storageError
-              : "Loading local data…"}
-        </p>
-      </div>
+          <p
+            role="alert"
+            className="mx-auto max-w-6xl px-4 py-2 text-sm text-danger-foreground sm:px-6"
+          >
+            {storageError}
+          </p>
+        </div>
+      )}
       {saveNotice && (
         <div className="shrink-0 border-b border-border bg-danger">
           <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2 sm:px-6">
@@ -575,17 +569,6 @@ export default function TimerApp() {
           <Statistics solves={solves} />
         </div>
       </main>
-      <footer
-        className={`shrink-0 border-t border-border px-4 py-4 sm:px-6 ${fadeCls}`}
-        aria-hidden={focused}
-        inert={focused}
-      >
-        <p className="mx-auto max-w-6xl text-sm text-muted-foreground">
-          {settings?.startMode === "press"
-            ? "Shortcuts: Space start/stop · N new scramble · D toggle DNF on the last solve."
-            : "Shortcuts: Space hold, release to start, press to stop · N new scramble · D toggle DNF on the last solve."}
-        </p>
-      </footer>
       {dataPanelOpen && (
         <Dialog title="Data and settings" wide onClose={() => setDataPanelOpen(false)}>
           <div className="max-h-[75vh] overflow-y-auto p-1">

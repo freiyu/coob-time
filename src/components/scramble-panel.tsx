@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Check, Copy, RefreshCw } from "lucide-react";
+import Dialog from "@/components/dialog";
 import ScrambleView from "@/components/scramble-view";
 import type { PuzzleId } from "@/lib/puzzles";
 
@@ -27,6 +28,7 @@ export default function ScramblePanel({
   const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">(
     "idle",
   );
+  const [popupOpen, setPopupOpen] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(
@@ -48,6 +50,7 @@ export default function ScramblePanel({
   };
 
   const copyLabel = copyState === "copied" ? "Copied" : "Copy Scramble";
+  const longScramble = scramble !== "" && scramble.split("\n").length > 3;
 
   return (
     <section
@@ -91,7 +94,7 @@ export default function ScramblePanel({
           </button>
         </div>
       </header>
-      {scramble !== "" && (
+      {scramble !== "" && !longScramble && (
         <p className="mt-4 font-mono text-base leading-relaxed break-words whitespace-pre-wrap text-foreground sm:text-lg">
           {scramble}
         </p>
@@ -102,7 +105,22 @@ export default function ScramblePanel({
           {error ? ` (${error})` : ""}
         </p>
       )}
-      {scramble !== "" && (
+      {scramble !== "" && longScramble && (
+        <div className="mt-4">
+          <button
+            type="button"
+            onClick={() => setPopupOpen(true)}
+            aria-label="Show scramble"
+            className="w-full rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <ScrambleView puzzleId={puzzleId} scramble={scramble} />
+          </button>
+          <p className="mt-1 text-center text-sm text-muted-foreground">
+            Click to see scramble
+          </p>
+        </div>
+      )}
+      {scramble !== "" && !longScramble && (
         <ScrambleView puzzleId={puzzleId} scramble={scramble} />
       )}
       {copyState === "failed" && (
@@ -113,6 +131,22 @@ export default function ScramblePanel({
       <p aria-live="polite" className="sr-only">
         {copyState === "copied" ? "Scramble copied" : ""}
       </p>
+      {popupOpen && scramble !== "" && (
+        <Dialog
+          title={`${puzzleLabel} scramble`}
+          wide
+          onClose={() => setPopupOpen(false)}
+        >
+          <div className="p-4 sm:p-6">
+            <p className="font-mono text-sm leading-relaxed break-words whitespace-pre-wrap text-foreground">
+              {scramble}
+            </p>
+            <div className="mt-3">
+              <ScrambleView puzzleId={puzzleId} scramble={scramble} />
+            </div>
+          </div>
+        </Dialog>
+      )}
     </section>
   );
 }

@@ -80,6 +80,8 @@ export function useTimer(options: UseTimerOptions) {
     const onKeyUp = (event: KeyboardEvent) => {
       if (event.code !== "Space") return;
       if (isTypingTarget(event.target)) return;
+      // A dialog opened mid-hold must not let release() start a solve.
+      if (isDialogOpen()) return;
       if (engine.holdToReady) engine.release();
     };
 

@@ -35,7 +35,7 @@ function StatCard({ label, value, sub, pb, danger }: StatCardProps) {
       </p>
       {pb && (
         <span className="mt-1.5 inline-flex w-fit items-center gap-1 rounded-full bg-brand-soft px-2 py-0.5 text-sm font-semibold text-brand-soft-foreground">
-          <Award aria-hidden className="size-3" />
+          <Award aria-hidden className="size-4" />
           PB
         </span>
       )}
@@ -47,6 +47,9 @@ function StatCard({ label, value, sub, pb, danger }: StatCardProps) {
 function notEnough(): { value: string; sub: string } {
   return { value: "—", sub: "Not enough solves" };
 }
+
+const TAB_BASE =
+  "rounded-lg px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 function TrendChart({ solves }: { solves: SolveRecord[] }) {
   const points = solves
@@ -236,7 +239,7 @@ export default function Statistics({ solves }: StatisticsProps) {
           role="tab"
           aria-selected={tab === "stats"}
           onClick={() => setTab("stats")}
-          className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+          className={`${TAB_BASE} ${
             tab === "stats"
               ? "bg-muted text-foreground"
               : "text-muted-foreground hover:text-foreground"
@@ -249,7 +252,7 @@ export default function Statistics({ solves }: StatisticsProps) {
           role="tab"
           aria-selected={tab === "trend"}
           onClick={() => setTab("trend")}
-          className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+          className={`${TAB_BASE} ${
             tab === "trend"
               ? "bg-muted text-foreground"
               : "text-muted-foreground hover:text-foreground"

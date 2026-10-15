@@ -251,7 +251,7 @@ export default function SolveHistory({
                               ? "text-destructive"
                               : isBest5
                                 ? "text-pb-foreground"
-                                : "text-warning-foreground"
+                                : "text-foreground"
                           }`}
                         >
                           {ao5 !== null ? formatMs(ao5) : "DNF"}
@@ -278,7 +278,7 @@ export default function SolveHistory({
                               ? "text-destructive"
                               : isBest12
                                 ? "text-pb-foreground"
-                                : "text-info-foreground"
+                                : "text-foreground"
                           }`}
                         >
                           {ao12 !== null ? formatMs(ao12) : "DNF"}

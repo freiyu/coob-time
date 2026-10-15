@@ -216,11 +216,11 @@ export default function TopBar({
               <kbd className={KBD_CLS}>Space</kbd>
             </li>
             <li className="flex items-center justify-between gap-4">
-              <span>Generate a new scramble (while stopped)</span>
+              <span>Generate a new scramble (not while running)</span>
               <kbd className={KBD_CLS}>N</kbd>
             </li>
             <li className="flex items-center justify-between gap-4">
-              <span>Toggle DNF on the last stopped solve</span>
+              <span>Toggle DNF on the solve from your last timer stop</span>
               <kbd className={KBD_CLS}>D</kbd>
             </li>
             <li className="flex items-center justify-between gap-4">

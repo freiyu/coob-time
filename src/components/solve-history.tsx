@@ -128,6 +128,12 @@ export default function SolveHistory({
                   scope="col"
                   className="border-r border-border px-4 py-2.5 text-left sm:px-6"
                 >
+                  No.
+                </th>
+                <th
+                  scope="col"
+                  className="border-r border-border px-3 py-2.5 text-left"
+                >
                   Time
                 </th>
                 <th
@@ -173,8 +179,10 @@ export default function SolveHistory({
                     onClick={() => setDetailId(solve.id)}
                     className="cursor-pointer border-b border-border last:border-b-0"
                   >
-                    <td className="border-r border-border px-4 py-2.5 sm:px-6">
-                      <span className="text-muted-foreground">#{number} </span>
+                    <td className="border-r border-border px-4 py-2.5 text-muted-foreground sm:px-6">
+                      {number}
+                    </td>
+                    <td className="border-r border-border px-3 py-2.5">
                       <button
                         type="button"
                         className={`rounded px-1 font-semibold tabular-nums hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${

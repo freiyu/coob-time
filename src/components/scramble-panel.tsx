@@ -50,7 +50,9 @@ export default function ScramblePanel({
   };
 
   const copyLabel = copyState === "copied" ? "Copied" : "Copy Scramble";
-  const longScramble = scramble !== "" && scramble.split("\n").length > 3;
+  const longScramble =
+    scramble !== "" &&
+    (puzzleId === "6x6" || puzzleId === "7x7" || scramble.split("\n").length > 3);
 
   return (
     <section

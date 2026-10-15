@@ -4,7 +4,7 @@ import Dialog from "@/components/dialog";
 import ScrambleView from "@/components/scramble-view";
 import { type PuzzleId } from "@/lib/puzzles";
 import type { Penalty, SolveRecord } from "@/lib/storage/types";
-import { aoN, bestAoN, effectiveMs, formatMs } from "@/lib/statistics";
+import { aoN, bestAoN, effectiveMs, formatMs, parseMs } from "@/lib/statistics";
 
 interface SolveHistoryProps {
   solves: SolveRecord[];
@@ -12,12 +12,14 @@ interface SolveHistoryProps {
   pbMs: number | null;
   onDelete: (id: string) => void;
   onSetPenalty: (id: string, penalty: Penalty) => void;
+  onAddManual: (rawTimeMs: number) => void;
+  onSetNotes: (id: string, notes: string) => void;
 }
 
 interface AoWindow {
   n: number;
   number: number;
-  value: number;
+  value: number | null;
   window: SolveRecord[];
 }
 
@@ -82,10 +84,16 @@ export default function SolveHistory({
   pbMs,
   onDelete,
   onSetPenalty,
+  onAddManual,
+  onSetNotes,
 }: SolveHistoryProps) {
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
   const [aoWindow, setAoWindow] = useState<AoWindow | null>(null);
+  const [manualOpen, setManualOpen] = useState(false);
+  const [manualText, setManualText] = useState("");
+  const [manualError, setManualError] = useState<string | null>(null);
+  const [notesDraft, setNotesDraft] = useState("");
 
   const rows = solves
     .map((solve, index) => ({
@@ -107,10 +115,23 @@ export default function SolveHistory({
     >
       <header className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3 sm:px-6">
         <h2 className="text-sm font-semibold">Solve history</h2>
-        <p className="text-sm text-muted-foreground">
-          {solves.length} {solves.length === 1 ? "solve" : "solves"} ·{" "}
-          {sessionName}
-        </p>
+        <div className="flex items-center gap-3">
+          <p className="text-sm text-muted-foreground">
+            {solves.length} {solves.length === 1 ? "solve" : "solves"} ·{" "}
+            {sessionName}
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              setManualText("");
+              setManualError(null);
+              setManualOpen(true);
+            }}
+            className="h-9 rounded-lg border border-border px-3 text-sm font-medium text-secondary-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            + Add solve
+          </button>
+        </div>
       </header>
       {rows.length === 0 ? (
         <div className="px-4 py-10 text-center sm:px-6">
@@ -176,7 +197,10 @@ export default function SolveHistory({
                 return (
                   <tr
                     key={solve.id}
-                    onClick={() => setDetailId(solve.id)}
+                    onClick={() => {
+                      setDetailId(solve.id);
+                      setNotesDraft(solve.notes ?? "");
+                    }}
                     className="cursor-pointer border-b border-border last:border-b-0"
                   >
                     <td className="border-r border-border px-4 py-2.5 text-muted-foreground sm:px-6">
@@ -202,7 +226,7 @@ export default function SolveHistory({
                       </button>
                     </td>
                     <td className="border-r border-border px-3 py-2.5 text-right tabular-nums">
-                      {ao5 === null ? (
+                      {number < 5 ? (
                         <span className="text-muted-foreground">—</span>
                       ) : (
                         <button
@@ -217,17 +241,19 @@ export default function SolveHistory({
                             });
                           }}
                           className={`rounded px-1 font-medium hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                            isBest5
-                              ? "text-pb-foreground"
-                              : "text-warning-foreground"
+                            ao5 === null
+                              ? "text-muted-foreground"
+                              : isBest5
+                                ? "text-pb-foreground"
+                                : "text-warning-foreground"
                           }`}
                         >
-                          {formatMs(ao5)}
+                          {ao5 !== null ? formatMs(ao5) : "DNF"}
                         </button>
                       )}
                     </td>
                     <td className="border-r border-border px-3 py-2.5 text-right tabular-nums">
-                      {ao12 === null ? (
+                      {number < 12 ? (
                         <span className="text-muted-foreground">—</span>
                       ) : (
                         <button
@@ -242,12 +268,14 @@ export default function SolveHistory({
                             });
                           }}
                           className={`rounded px-1 font-medium hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                            isBest12
-                              ? "text-pb-foreground"
-                              : "text-info-foreground"
+                            ao12 === null
+                              ? "text-muted-foreground"
+                              : isBest12
+                                ? "text-pb-foreground"
+                                : "text-info-foreground"
                           }`}
                         >
-                          {formatMs(ao12)}
+                          {ao12 !== null ? formatMs(ao12) : "DNF"}
                         </button>
                       )}
                     </td>
@@ -294,6 +322,7 @@ export default function SolveHistory({
                 Raw {formatMs(detail.solve.rawTimeMs)}
                 {detail.solve.penalty === "plus2" && " · +2 penalty"}
                 {detail.solve.penalty === "dnf" && " · DNF"}
+                {detail.solve.source === "manual" && " · manual entry"}
                 {" · "}
                 {new Date(detail.solve.createdAt).toLocaleString()}
               </p>
@@ -302,6 +331,29 @@ export default function SolveHistory({
               solve={detail.solve}
               onSetPenalty={onSetPenalty}
             />
+            <div>
+              <label className="block text-sm font-medium">
+                Notes
+                <textarea
+                  value={notesDraft}
+                  onChange={(event) => setNotesDraft(event.target.value)}
+                  maxLength={2000}
+                  rows={2}
+                  placeholder="Add a note…"
+                  className="mt-1.5 w-full rounded-lg border border-input bg-card px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                />
+              </label>
+              <div className="mt-2 flex justify-end">
+                <button
+                  type="button"
+                  disabled={notesDraft === (detail.solve.notes ?? "")}
+                  onClick={() => onSetNotes(detail.solve.id, notesDraft)}
+                  className="h-9 rounded-lg bg-brand px-3 text-sm font-medium text-white transition-colors duration-150 hover:bg-brand-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+                >
+                  Save note
+                </button>
+              </div>
+            </div>
             <div>
               <p className="text-sm font-medium">Scramble</p>
               <p className="mt-1 break-words text-sm text-muted-foreground">
@@ -371,7 +423,7 @@ export default function SolveHistory({
         >
           <div className="p-4">
             <p className="text-2xl font-semibold tabular-nums">
-              {formatMs(aoWindow.value)}
+              {aoWindow.value === null ? "DNF" : formatMs(aoWindow.value)}
             </p>
             <div className="mt-3 grid grid-cols-6 gap-2">
               {aoWindow.window.map((solve, index) => {
@@ -392,6 +444,56 @@ export default function SolveHistory({
               })}
             </div>
           </div>
+        </Dialog>
+      )}
+      {manualOpen && (
+        <Dialog title="Add solve manually" onClose={() => setManualOpen(false)}>
+          <form
+            className="space-y-3 p-4"
+            onSubmit={(event) => {
+              event.preventDefault();
+              const ms = parseMs(manualText);
+              if (ms === null) {
+                setManualError(
+                  "Enter a valid time like 12.34, 1:05.12, or 0.5.",
+                );
+                return;
+              }
+              onAddManual(ms);
+              setManualOpen(false);
+            }}
+          >
+            <label className="block text-sm font-medium">
+              Time
+              <input
+                value={manualText}
+                onChange={(event) => setManualText(event.target.value)}
+                autoFocus
+                placeholder="12.34 or 1:05.12"
+                className="mt-1.5 h-10 w-full rounded-lg border border-input bg-card px-3 text-sm tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              />
+            </label>
+            {manualError && (
+              <p role="alert" className="text-sm text-danger-foreground">
+                {manualError}
+              </p>
+            )}
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setManualOpen(false)}
+                className="h-10 rounded-lg border border-border px-4 text-sm font-medium text-secondary-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="h-10 rounded-lg bg-brand px-4 text-sm font-medium text-white transition-colors duration-150 hover:bg-brand-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                Add solve
+              </button>
+            </div>
+          </form>
         </Dialog>
       )}
     </section>

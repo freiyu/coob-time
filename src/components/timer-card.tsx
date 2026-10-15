@@ -9,6 +9,7 @@ interface TimerCardProps {
   engine: TimerEngine;
   phase: TimerPhase;
   ao5: number | null;
+  ao5Dnf: boolean;
   pendingSolve: SolveRecord | null;
   scrambleReady: boolean;
   holdMode: boolean;
@@ -31,6 +32,7 @@ export default function TimerCard({
   engine,
   phase,
   ao5,
+  ao5Dnf,
   pendingSolve,
   scrambleReady,
   holdMode,
@@ -179,7 +181,7 @@ export default function TimerCard({
           <div className="mt-2 flex w-full max-w-xs items-baseline justify-between border-t border-border pt-4 text-sm">
             <span className="text-muted-foreground">Average of 5</span>
             <span className="font-semibold tabular-nums text-foreground">
-              {ao5 !== null ? formatMs(ao5) : "—"}
+              {ao5 !== null ? formatMs(ao5) : ao5Dnf ? "DNF" : "—"}
             </span>
           </div>
         )}

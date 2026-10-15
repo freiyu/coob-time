@@ -192,16 +192,24 @@ export default function Statistics({ solves }: StatisticsProps) {
       : { label: "Mean", ...notEnough() },
     currentAo5 !== null
       ? { label: "Ao5", value: formatMs(currentAo5) }
-      : { label: "Ao5", ...notEnough() },
+      : count >= 5
+        ? { label: "Ao5", value: "DNF" }
+        : { label: "Ao5", ...notEnough() },
     currentAo12 !== null
       ? { label: "Ao12", value: formatMs(currentAo12) }
-      : { label: "Ao12", ...notEnough() },
+      : count >= 12
+        ? { label: "Ao12", value: "DNF" }
+        : { label: "Ao12", ...notEnough() },
     topAo5 !== null
       ? { label: "Best Ao5", value: formatMs(topAo5) }
-      : { label: "Best Ao5", ...notEnough() },
+      : count >= 5
+        ? { label: "Best Ao5", value: "DNF" }
+        : { label: "Best Ao5", ...notEnough() },
     topAo12 !== null
       ? { label: "Best Ao12", value: formatMs(topAo12) }
-      : { label: "Best Ao12", ...notEnough() },
+      : count >= 12
+        ? { label: "Best Ao12", value: "DNF" }
+        : { label: "Best Ao12", ...notEnough() },
   ];
 
   return (

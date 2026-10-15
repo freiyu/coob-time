@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Box, Monitor, Moon, Pencil, Plus, Settings, Sun, Trash2 } from "lucide-react";
+import { Box, HelpCircle, Monitor, Moon, Pencil, Plus, Settings, Sun, Trash2 } from "lucide-react";
 import Dialog from "@/components/dialog";
 import Menu, { type MenuItem } from "@/components/menu";
 import { PUZZLES, type Puzzle, type PuzzleId } from "@/lib/puzzles";
@@ -49,7 +49,9 @@ export default function TopBar({
   onThemeChange,
   selectionLocked,
 }: TopBarProps) {
-  const [dialog, setDialog] = useState<"rename" | "delete" | null>(null);
+  const [dialog, setDialog] = useState<"rename" | "delete" | "help" | null>(
+    null,
+  );
   const [draftName, setDraftName] = useState("");
 
   const activeSession = sessions.find((session) => session.id === sessionId);
@@ -143,6 +145,14 @@ export default function TopBar({
           >
             <Settings aria-hidden className="size-4" />
           </button>
+          <button
+            type="button"
+            aria-label="Keyboard shortcuts"
+            onClick={() => setDialog("help")}
+            className="flex h-10 w-10 items-center justify-center rounded-lg border border-input bg-card text-secondary-foreground transition-colors duration-150 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <HelpCircle aria-hidden className="size-4" />
+          </button>
         </div>
       </div>
     </header>
@@ -188,6 +198,37 @@ export default function TopBar({
               </button>
             </div>
           </form>
+        </Dialog>
+      )}
+      {dialog === "help" && (
+        <Dialog title="Keyboard shortcuts" onClose={() => setDialog(null)}>
+          <ul className="space-y-2 p-4 text-sm">
+            <li className="flex items-center justify-between gap-4">
+              <span>Start / stop the timer</span>
+              <kbd className="rounded-lg border border-border bg-muted px-2 py-0.5 text-sm font-semibold">Space</kbd>
+            </li>
+            <li className="flex items-center justify-between gap-4">
+              <span>Generate a new scramble</span>
+              <kbd className="rounded-lg border border-border bg-muted px-2 py-0.5 text-sm font-semibold">N</kbd>
+            </li>
+            <li className="flex items-center justify-between gap-4">
+              <span>Toggle DNF on the last stopped solve</span>
+              <kbd className="rounded-lg border border-border bg-muted px-2 py-0.5 text-sm font-semibold">D</kbd>
+            </li>
+            <li className="flex items-center justify-between gap-4">
+              <span>Cancel the ready state / close a popup</span>
+              <kbd className="rounded-lg border border-border bg-muted px-2 py-0.5 text-sm font-semibold">Esc</kbd>
+            </li>
+            <li className="flex items-center justify-between gap-4">
+              <span>+2 goes through the visible buttons (history or timer)</span>
+              <kbd className="rounded-lg border border-border bg-muted px-2 py-0.5 text-sm font-semibold">—</kbd>
+            </li>
+          </ul>
+          <p className="border-t border-border px-4 py-3 text-sm text-muted-foreground">
+            In hold mode, press and hold Space until Ready, then release to
+            start. Shortcuts are ignored while typing in a field or while a
+            popup is open.
+          </p>
         </Dialog>
       )}
       {dialog === "delete" && activeSession && (

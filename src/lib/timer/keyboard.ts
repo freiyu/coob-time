@@ -21,3 +21,11 @@ export function isInsideMenu(target: EventTarget | null): boolean {
   if (typeof el.closest !== "function") return false;
   return el.closest('[role="menu"]') !== null;
 }
+
+// True while a dialog is open, so Space/N/D/Esc act on the dialog instead
+// of the timer (a click inside a dialog can leave focus on <body>).
+export function isDialogOpen(root?: ParentNode): boolean {
+  const scope = root ?? (typeof document !== "undefined" ? document : null);
+  if (!scope || typeof scope.querySelector !== "function") return false;
+  return scope.querySelector('[role="dialog"]') !== null;
+}

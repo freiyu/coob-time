@@ -54,3 +54,23 @@ export function bestAoN(solves: SolveLike[], n: number): number | null {
   }
   return best;
 }
+
+// Parse a user-typed time ("12.34", "1:05.12", "0.5") to milliseconds.
+// With a colon, every part must be under 60; a single number may exceed 60.
+// Rejects empty, non-numeric, zero, and over-24h inputs.
+export function parseMs(input: string): number | null {
+  const trimmed = input.trim();
+  if (trimmed === "") return null;
+  const parts = trimmed.split(":");
+  if (parts.length > 3) return null;
+  let totalSeconds = 0;
+  for (const part of parts) {
+    if (!/^\d+(\.\d{1,6})?$/.test(part)) return null;
+    const value = Number(part);
+    if (parts.length > 1 && value >= 60) return null;
+    totalSeconds = totalSeconds * 60 + value;
+  }
+  const ms = Math.round(totalSeconds * 1000);
+  if (!Number.isFinite(ms) || ms <= 0 || ms > 24 * 3600 * 1000) return null;
+  return ms;
+}

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createTimerEngine } from "./engine";
-import { isInsideMenu, isTypingTarget } from "./keyboard";
+import { isDialogOpen, isInsideMenu, isTypingTarget } from "./keyboard";
 import type { TimerPhase } from "./types";
 
 interface UseTimerOptions {
@@ -46,6 +46,7 @@ export function useTimer(options: UseTimerOptions) {
       if (event.metaKey || event.ctrlKey || event.altKey) return;
       if (isTypingTarget(event.target)) return;
       if (isInsideMenu(event.target)) return;
+      if (isDialogOpen()) return;
 
       if (event.code === "Space") {
         // Held Space scrolls the page via auto-repeat keydowns, so block

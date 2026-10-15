@@ -349,6 +349,75 @@ export default function TimerApp() {
     handleSetPenalty(last.id, last.penalty === "dnf" ? "none" : "dnf");
   };
 
+  const handleAddManual = (rawTimeMs: number) => {
+    const now = new Date().toISOString();
+    const record: SolveRecord = {
+      id: crypto.randomUUID(),
+      sessionId: session.id,
+      puzzleId,
+      rawTimeMs,
+      penalty: "none",
+      scramble: "",
+      createdAt: now,
+      source: "manual",
+      schemaVersion: 1,
+    };
+    const sessionRecord = toSessionRecord({
+      ...session,
+      createdAt: session.createdAt === INITIAL_STAMP ? now : session.createdAt,
+      updatedAt: now,
+    });
+    setSessions((prev) => {
+      const index = prev.findIndex((candidate) => candidate.id === session.id);
+      if (index === -1) {
+        return [
+          ...prev,
+          {
+            ...session,
+            createdAt: sessionRecord.createdAt,
+            updatedAt: now,
+            solves: [record],
+          },
+        ];
+      }
+      const next = [...prev];
+      next[index] = {
+        ...next[index],
+        updatedAt: now,
+        solves: [...next[index].solves, record],
+      };
+      return next;
+    });
+    persistSolveRecord(record, sessionRecord);
+  };
+
+  const handleSetNotes = (solveId: string, notes: string) => {
+    const target = solves.find((candidate) => candidate.id === solveId);
+    if (!target) return;
+    const updated: SolveRecord = { ...target };
+    if (notes.trim() === "") delete updated.notes;
+    else updated.notes = notes;
+    setSessions((prev) =>
+      prev.map((candidate) =>
+        candidate.id !== session.id
+          ? candidate
+          : {
+              ...candidate,
+              solves: candidate.solves.map((solve) =>
+                solve.id === solveId ? updated : solve,
+              ),
+            },
+      ),
+    );
+    setSaveState("saving");
+    putSolve(updated)
+      .then(() => {
+        setSaveState("saved");
+        setSaveNotice(null);
+      })
+      .catch(persistFailure);
+  };
+
   const handleNewScramble = () => {
     generateFresh(puzzleId);
   };
@@ -535,6 +604,7 @@ export default function TimerApp() {
             scrambleReady={scrambleState.status === "ready"}
             holdMode={settings?.startMode !== "press"}
             saveState={saveState}
+            ao5Dnf={solves.length >= 5 && ao5 === null}
             onSetPenalty={(penalty) => {
               if (pendingSolve) handleSetPenalty(pendingSolve.id, penalty);
             }}
@@ -565,6 +635,8 @@ export default function TimerApp() {
             pbMs={pbMs}
             onDelete={handleDeleteSolve}
             onSetPenalty={handleSetPenalty}
+            onAddManual={handleAddManual}
+            onSetNotes={handleSetNotes}
           />
           <Statistics solves={solves} />
         </div>

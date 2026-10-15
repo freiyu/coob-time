@@ -190,9 +190,14 @@ export default function SolveHistory({
                         }`}
                       >
                         {effective === null ? (
-                          <span className="text-muted-foreground">—</span>
+                          <span className="rounded-full bg-danger px-2 py-0.5 text-sm font-semibold text-danger-foreground">
+                            DNF
+                          </span>
                         ) : (
-                          formatMs(effective)
+                          <>
+                            {formatMs(effective)}
+                            {solve.penalty === "plus2" && "+"}
+                          </>
                         )}
                       </button>
                     </td>
@@ -250,22 +255,7 @@ export default function SolveHistory({
                       className="border-r border-border px-3 py-2.5 text-right"
                       onClick={(event) => event.stopPropagation()}
                     >
-                      <span className="inline-flex items-center gap-1">
-                        {solve.penalty === "plus2" && (
-                          <span className="rounded-full bg-warning px-2 py-0.5 text-sm font-semibold text-warning-foreground">
-                            +2
-                          </span>
-                        )}
-                        {solve.penalty === "dnf" && (
-                          <span className="rounded-full bg-danger px-2 py-0.5 text-sm font-semibold text-danger-foreground">
-                            DNF
-                          </span>
-                        )}
-                        <PenaltyButtons
-                          solve={solve}
-                          onSetPenalty={onSetPenalty}
-                        />
-                      </span>
+                      <PenaltyButtons solve={solve} onSetPenalty={onSetPenalty} />
                     </td>
                     <td
                       className="px-4 py-2.5 text-right sm:px-6"

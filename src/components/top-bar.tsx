@@ -80,7 +80,7 @@ export default function TopBar({
       onSelect: () => onSessionChange(session.id),
     })),
     {
-      label: "+ New session",
+      label: "New session",
       value: "new-session",
       icon: <Plus aria-hidden className="size-4" />,
       disabled: selectionLocked,

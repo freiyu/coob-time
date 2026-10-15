@@ -117,12 +117,14 @@ export default function TimerCard({
   const inspectionWarn =
     insp >= 15_000 && (inspectionMode === "wca" || inspectionMode === "15s");
   // Tone line only when the start is actually at stake (WCA / 15s warning).
+  // The 15s mode keeps its fuller copy only in the plain inspection label —
+  // composed with Hold…/Ready the short "15s up" reads better.
   const cueTone = inspectionDanger
     ? "Start now = DNF"
     : inspectionWarn
       ? inspectionMode === "wca"
         ? "Start now = +2"
-        : "15s up — start whenever"
+        : "15s up"
       : null;
 
   const label = showInspection
@@ -134,8 +136,10 @@ export default function TimerCard({
         ? cueTone
           ? `Ready — ${cueTone}`
           : "Ready"
-        : (cueTone ??
-          `Inspection — ${holdMode ? "hold" : "press"} Space`)
+        : (inspectionMode === "15s" && insp >= 15_000
+            ? "15s up — start whenever"
+            : (cueTone ??
+              `Inspection — ${holdMode ? "hold" : "press"} Space`))
     : phase === "idle"
       ? scrambleReady
         ? idleCopy

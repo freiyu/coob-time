@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Trash2 } from "lucide-react";
+import { Award, Trash2 } from "lucide-react";
 import Dialog from "@/components/dialog";
 import ScrambleView from "@/components/scramble-view";
 import {
@@ -10,6 +10,16 @@ import {
 import { type PuzzleId } from "@/lib/puzzles";
 import type { Penalty, SolveRecord } from "@/lib/storage/types";
 import { aoN, bestAoN, effectiveMs, formatMs, parseMs } from "@/lib/statistics";
+
+// DESIGN.md: a personal best is marked with text and an icon, not color alone.
+function PbTag() {
+  return (
+    <span className="ml-1 inline-flex items-center gap-0.5 align-middle font-medium text-pb-foreground">
+      <Award aria-hidden className="size-4" />
+      PB
+    </span>
+  );
+}
 
 interface SolveHistoryProps {
   solves: SolveRecord[];
@@ -229,6 +239,7 @@ export default function SolveHistory({
                             {solve.penalty === "plus2" && "+"}
                           </>
                         )}
+                        {isFastest && effective !== null && <PbTag />}
                       </button>
                     </td>
                     <td className="border-r border-border px-3 py-2.5 text-right tabular-nums">
@@ -255,6 +266,7 @@ export default function SolveHistory({
                           }`}
                         >
                           {ao5 !== null ? formatMs(ao5) : "DNF"}
+                          {isBest5 && <PbTag />}
                         </button>
                       )}
                     </td>
@@ -282,6 +294,7 @@ export default function SolveHistory({
                           }`}
                         >
                           {ao12 !== null ? formatMs(ao12) : "DNF"}
+                          {isBest12 && <PbTag />}
                         </button>
                       )}
                     </td>

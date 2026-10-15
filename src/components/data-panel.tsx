@@ -235,6 +235,69 @@ export default function DataPanel({
             ))}
           </fieldset>
 
+          <fieldset className="space-y-1">
+            <legend className="text-sm font-medium">Inspection</legend>
+            {(
+              [
+                ["off", "Off — start the solve right away"],
+                ["15s", "15 seconds (guidance only, no penalties)"],
+                [
+                  "wca",
+                  "WCA — +2 if you start after 15s, DNF after 17s",
+                ],
+              ] as const
+            ).map(([value, label]) => (
+              <label
+                key={value}
+                className="flex min-h-10 items-center gap-2 py-1.5 text-sm"
+              >
+                <input
+                  type="radio"
+                  name="inspectionMode"
+                  value={value}
+                  checked={settings?.inspectionMode === value}
+                  disabled={!settings || !storageOk}
+                  onChange={() => updateSettings({ inspectionMode: value })}
+                  className="size-4 accent-primary"
+                />
+                {label}
+              </label>
+            ))}
+          </fieldset>
+
+          <div className="space-y-1">
+            {(
+              [
+                [
+                  "soundEnabled",
+                  "Beep when a solve is recorded",
+                  settings?.soundEnabled === true,
+                ],
+                [
+                  "autoNextScramble",
+                  "New scramble automatically after each solve",
+                  settings?.autoNextScramble !== false,
+                ],
+              ] as const
+            ).map(([key, label, checked]) => (
+              <label
+                key={key}
+                className="flex min-h-10 items-center gap-2 py-1.5 text-sm"
+              >
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  disabled={!settings || !storageOk}
+                  onChange={(event) =>
+                    updateSettings({ [key]: event.target.checked })
+                  }
+                  className="size-4 accent-primary"
+                />
+                {label}
+              </label>
+            ))}
+          </div>
+
           <label className="block space-y-1.5">
             <span className="text-sm font-medium">Default puzzle</span>
             <select

@@ -3,7 +3,11 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { Penalty, SolveRecord } from "@/lib/storage/types";
 import { effectiveMs, formatMs } from "@/lib/statistics";
-import type { TimerEngine, TimerPhase } from "@/lib/timer/types";
+import type {
+  InspectionMode,
+  TimerEngine,
+  TimerPhase,
+} from "@/lib/timer/types";
 
 interface TimerCardProps {
   engine: TimerEngine;
@@ -13,12 +17,13 @@ interface TimerCardProps {
   pendingSolve: SolveRecord | null;
   scrambleReady: boolean;
   holdMode: boolean;
+  inspectionMode: InspectionMode;
   saveState: "saving" | "saved" | "failed" | null;
   onSetPenalty: (penalty: Penalty) => void;
 }
 
 const STATE_LABEL: Record<
-  Exclude<TimerPhase, "idle" | "stopped">,
+  Exclude<TimerPhase, "idle" | "stopped" | "inspection">,
   string
 > = {
   holding: "Hold…",
@@ -36,6 +41,7 @@ export default function TimerCard({
   pendingSolve,
   scrambleReady,
   holdMode,
+  inspectionMode,
   saveState,
   onSetPenalty,
 }: TimerCardProps) {
@@ -59,65 +65,99 @@ export default function TimerCard({
   }, [focused]);
 
   useEffect(() => {
-    if (phase !== "running") {
+    if (phase !== "running" && phase !== "inspection") {
       setElapsed(engine.elapsedMs());
       return;
     }
     let frame = requestAnimationFrame(function tick() {
-      setElapsed(engine.elapsedMs());
+      setElapsed(
+        phase === "inspection"
+          ? engine.inspectionElapsedMs()
+          : engine.elapsedMs(),
+      );
       frame = requestAnimationFrame(tick);
     });
     return () => cancelAnimationFrame(frame);
   }, [phase, engine]);
 
   let digits: string;
-  if (phase === "stopped" && pendingSolve) {
-    digits =
-      pendingSolve.penalty === "dnf"
+  if (phase === "stopped") {
+    digits = pendingSolve
+      ? pendingSolve.penalty === "dnf"
         ? "DNF"
-        : formatMs(effectiveMs(pendingSolve) ?? pendingSolve.rawTimeMs);
+        : formatMs(effectiveMs(pendingSolve) ?? pendingSolve.rawTimeMs)
+      : "0.00";
   } else {
     digits = formatMs(elapsed);
   }
 
   const idleCopy = holdMode ? "Hold Space to start" : "Press Space to start";
+  // Inspection stays count-up; WCA turns orange at 15s and red at 17s,
+  // the 15s mode only warns (no penalties).
+  const inspectionCue =
+    inspectionMode === "wca" && elapsed > 17_000
+      ? "Start now = DNF"
+      : inspectionMode === "wca" && elapsed > 15_000
+        ? "Start now = +2"
+        : elapsed > 15_000
+          ? "15s up — start whenever"
+          : `Inspection — ${holdMode ? "hold" : "press"} Space`;
+  const inspectionDanger = inspectionMode === "wca" && elapsed > 17_000;
+  const inspectionWarn =
+    elapsed > 15_000 && (inspectionMode === "wca" || inspectionMode === "15s");
+
   const label =
     phase === "idle"
       ? scrambleReady
         ? idleCopy
         : "Waiting for scramble…"
-      : phase === "stopped"
-        ? saveState === "saving"
-          ? "Saving…"
-          : saveState === "saved"
-            ? "Saved"
-            : saveState === "failed"
-              ? "Stopped — not saved"
-              : "Stopped"
-        : STATE_LABEL[phase];
+      : phase === "inspection"
+        ? inspectionCue
+        : phase === "stopped"
+          ? saveState === "saving"
+            ? "Saving…"
+            : saveState === "saved"
+              ? "Saved"
+              : saveState === "failed"
+                ? "Stopped — not saved"
+                : "Stopped"
+          : STATE_LABEL[phase];
   const showPenalties = phase === "stopped" && pendingSolve !== null;
   const penaltyNote =
     phase === "stopped" && pendingSolve && pendingSolve.penalty !== "none"
       ? ` ${pendingSolve.penalty === "plus2" ? "+2 applied" : "DNF applied"}`
       : "";
-  const digitColor =
-    phase === "holding"
+  const inspectionActive = phase === "inspection";
+  const digitColor = inspectionActive
+    ? inspectionDanger
+      ? "text-destructive"
+      : inspectionWarn
+        ? "text-warning-foreground"
+        : "text-foreground"
+    : phase === "holding"
       ? "text-destructive"
       : phase === "ready"
         ? "text-brand-strong"
         : "text-foreground";
-  const stateColor =
-    phase === "holding"
+  const stateColor = inspectionActive
+    ? inspectionDanger
+      ? "text-destructive"
+      : inspectionWarn
+        ? "text-warning-foreground"
+        : "text-muted-foreground"
+    : phase === "holding"
       ? "text-destructive"
       : phase === "ready"
         ? "text-brand-strong"
         : "text-muted-foreground";
   const ringCls =
-    phase === "holding"
+    inspectionActive && inspectionDanger
       ? "ring-1 ring-destructive"
-      : phase === "ready"
-        ? "ring-1 ring-brand"
-        : "";
+      : phase === "holding"
+        ? "ring-1 ring-destructive"
+        : phase === "ready"
+          ? "ring-1 ring-brand"
+          : "";
 
   return (
     <section

@@ -1,18 +1,19 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createTimerEngine } from "./engine";
 import { isDialogOpen, isInsideMenu, isTypingTarget } from "./keyboard";
-import type { TimerPhase } from "./types";
+import type { InspectionMode, TimerPenalty, TimerPhase } from "./types";
 
 interface UseTimerOptions {
   holdToReady: boolean;
+  inspectionMode: InspectionMode;
   canStart: () => boolean;
-  onSolve: (rawTimeMs: number) => void;
+  onSolve: (rawTimeMs: number, penalty: TimerPenalty) => void;
   onNewScramble: () => void;
   onToggleDnf: () => void;
 }
 
 export function useTimer(options: UseTimerOptions) {
-  const { holdToReady } = options;
+  const { holdToReady, inspectionMode } = options;
   const engine = useMemo(
     () => createTimerEngine({ holdToReady }),
     [holdToReady],
@@ -31,11 +32,15 @@ export function useTimer(options: UseTimerOptions) {
   });
 
   useEffect(() => engine.subscribe(setPhase), [engine]);
+  useEffect(() => engine.setInspection(inspectionMode), [
+    engine,
+    inspectionMode,
+  ]);
 
   const toggle = useCallback(() => {
     if (engine.phase === "running") {
-      const ms = engine.stop();
-      if (ms !== null) onSolveRef.current(ms);
+      const stop = engine.stop();
+      if (stop !== null) onSolveRef.current(stop.rawTimeMs, stop.penalty);
     } else if (canStartRef.current()) {
       engine.start();
     }
@@ -53,6 +58,14 @@ export function useTimer(options: UseTimerOptions) {
         // every Space (including repeats) before the repeat guard.
         event.preventDefault();
         if (event.repeat) return;
+        // First Space from idle/stopped enters inspection (when enabled);
+        // the next hold/press is the actual solve start.
+        if (
+          (engine.phase === "idle" || engine.phase === "stopped") &&
+          engine.startInspection()
+        ) {
+          return;
+        }
         if (engine.holdToReady && engine.phase !== "running") {
           if (canStartRef.current()) engine.arm();
         } else {
@@ -69,7 +82,9 @@ export function useTimer(options: UseTimerOptions) {
         return;
       }
       if (event.key === "d" || event.key === "D") {
-        if (engine.phase === "stopped") onToggleDnfRef.current();
+        if (engine.phase === "stopped" || engine.phase === "inspection") {
+          onToggleDnfRef.current();
+        }
         return;
       }
       if (event.key === "Escape") {

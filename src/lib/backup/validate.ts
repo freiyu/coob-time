@@ -30,14 +30,22 @@ const sessionSchema = z.object({
   notes: z.string().max(2_000).optional(),
 });
 
-const settingsSchema = z.object({
-  defaultPuzzleId: z.string().min(1).max(32),
-  startMode: z.enum(["press", "hold"]),
-  inspectionEnabled: z.boolean(),
-  soundEnabled: z.boolean(),
-  theme: z.enum(["dark", "light", "system"]),
-  autoNextScramble: z.boolean(),
-});
+const settingsSchema = z
+  .object({
+    defaultPuzzleId: z.string().min(1).max(32),
+    startMode: z.enum(["press", "hold"]),
+    // v1 backups store inspectionEnabled: boolean; newer ones store the
+    // three-way inspectionMode. Accept both, output only inspectionMode.
+    inspectionMode: z.enum(["off", "15s", "wca"]).optional(),
+    inspectionEnabled: z.boolean().optional(),
+    soundEnabled: z.boolean(),
+    theme: z.enum(["dark", "light", "system"]),
+    autoNextScramble: z.boolean(),
+  })
+  .transform(({ inspectionMode, inspectionEnabled, ...rest }) => ({
+    ...rest,
+    inspectionMode: inspectionMode ?? (inspectionEnabled ? "wca" : "off"),
+  }));
 
 const backupSchema = z.object({
   app: z.literal(BACKUP_APP),

@@ -1,5 +1,6 @@
 export type TimerPhase =
   | "idle"
+  | "inspection"
   | "holding"
   | "ready"
   | "running"
@@ -7,11 +8,23 @@ export type TimerPhase =
   | "saving"
   | "saved";
 
+export type InspectionMode = "off" | "15s" | "wca";
+
+export type TimerPenalty = "none" | "plus2" | "dnf";
+
+export interface TimerStop {
+  rawTimeMs: number;
+  penalty: TimerPenalty;
+}
+
 export interface TimerEngine {
   readonly phase: TimerPhase;
   readonly holdToReady: boolean;
+  setInspection(mode: InspectionMode): void;
+  startInspection(): boolean;
+  inspectionElapsedMs(): number;
   start(): void;
-  stop(): number | null;
+  stop(): TimerStop | null;
   arm(): void;
   release(): void;
   cancel(): void;

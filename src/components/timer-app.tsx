@@ -34,6 +34,24 @@ import { useTimer } from "@/lib/timer/use-timer";
 const THEME_KEY = "cubetime-theme";
 const THEME_EVENT = "cubetime-theme-change";
 
+// Short confirmation beep for a recorded solve (settings.soundEnabled).
+// Runs only from a key handler, so the AudioContext has a user gesture.
+function playBeep() {
+  try {
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.frequency.value = 880;
+    gain.gain.value = 0.08;
+    osc.connect(gain).connect(ctx.destination);
+    osc.onended = () => void ctx.close();
+    osc.start();
+    osc.stop(ctx.currentTime + 0.09);
+  } catch {
+    // Audio unavailable — the solve itself is already persisted.
+  }
+}
+
 type Session = SessionRecord & { solves: SolveRecord[] };
 
 interface ScrambleState {
@@ -307,14 +325,14 @@ export default function TimerApp() {
     persistSolveRecord(record, sessionRecord);
   };
 
-  const handleSolve = (rawTimeMs: number) => {
+  const handleSolve = (rawTimeMs: number, penalty: Penalty) => {
     const now = new Date().toISOString();
     const record: SolveRecord = {
       id: crypto.randomUUID(),
       sessionId: session.id,
       puzzleId,
       rawTimeMs,
-      penalty: "none",
+      penalty,
       scramble: scrambleState.scramble,
       createdAt: now,
       source: "timer",
@@ -322,7 +340,8 @@ export default function TimerApp() {
     };
     setPendingSolveId(record.id);
     appendSolve(record);
-    generateFresh(puzzleId);
+    if (settings?.soundEnabled) playBeep();
+    if (settings?.autoNextScramble !== false) generateFresh(puzzleId);
   };
 
   const updateSolve = (
@@ -418,6 +437,7 @@ export default function TimerApp() {
 
   const timer = useTimer({
     holdToReady: settings?.startMode !== "press",
+    inspectionMode: settings?.inspectionMode ?? "off",
     canStart: () => scrambleState.status === "ready",
     onSolve: handleSolve,
     onNewScramble: handleNewScramble,
@@ -579,6 +599,7 @@ export default function TimerApp() {
             pendingSolve={pendingSolve}
             scrambleReady={scrambleState.status === "ready"}
             holdMode={settings?.startMode !== "press"}
+            inspectionMode={settings?.inspectionMode ?? "off"}
             saveState={saveState}
             ao5Dnf={solves.length >= 5 && ao5 === null}
             onSetPenalty={(penalty) => {

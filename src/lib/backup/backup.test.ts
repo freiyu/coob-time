@@ -61,6 +61,27 @@ describe("parseBackup", () => {
     bad.solves[0].rawTimeMs = "fast";
     expect(parseBackup(bad).ok).toBe(false);
   });
+
+  it("accepts a legacy v1 backup and maps inspectionEnabled to inspectionMode", () => {
+    const legacy = structuredClone(backup()) as Record<string, unknown>;
+    const settings = legacy.settings as Record<string, unknown>;
+    delete settings.inspectionMode;
+    settings.inspectionEnabled = true;
+    const result = parseBackup(legacy);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.backup.settings.inspectionMode).toBe("wca");
+      expect(
+        (result.backup.settings as Record<string, unknown>)
+          .inspectionEnabled,
+      ).toBeUndefined();
+    }
+
+    settings.inspectionEnabled = false;
+    const off = parseBackup(legacy);
+    expect(off.ok).toBe(true);
+    if (off.ok) expect(off.backup.settings.inspectionMode).toBe("off");
+  });
 });
 
 describe("backupToCsv", () => {
@@ -130,7 +151,9 @@ describe("planImport", () => {
 
 describe("storage constants", () => {
   it("pins the IndexedDB schema version so upgrades stay intentional", () => {
-    expect(DB_VERSION).toBe(1);
+    expect(DB_VERSION).toBe(2);
     expect(DEFAULT_SETTINGS.startMode).toBe("hold");
+    expect(DEFAULT_SETTINGS.inspectionMode).toBe("off");
+    expect(DEFAULT_SETTINGS.soundEnabled).toBe(false);
   });
 });

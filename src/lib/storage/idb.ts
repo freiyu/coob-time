@@ -2,15 +2,15 @@ import { openDB, type DBSchema, type IDBPDatabase } from "idb";
 import type { SessionRecord, SettingsRecord, SolveRecord } from "@/lib/storage/types";
 
 export const DB_NAME = "cubetime";
-// ponytail: v1 creates every store; real migrations start at v2 — bump
-// DB_VERSION and add an upgrade branch there when the schema first changes.
-export const DB_VERSION = 1;
+// v1 created every store; v2 replaced the inspectionEnabled boolean with
+// the three-way inspectionMode (off / 15s / wca).
+export const DB_VERSION = 2;
 const SETTINGS_KEY = "app";
 
 export const DEFAULT_SETTINGS: SettingsRecord = {
   defaultPuzzleId: "3x3",
   startMode: "hold",
-  inspectionEnabled: false,
+  inspectionMode: "off",
   soundEnabled: false,
   theme: "system",
   autoNextScramble: true,
@@ -32,7 +32,7 @@ export function cubetimeDb(): Promise<IDBPDatabase<CubetimeDB>> {
   if (dbPromise === null) {
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
     const opened = openDB<CubetimeDB>(DB_NAME, DB_VERSION, {
-      upgrade(db) {
+      async upgrade(db, oldVersion) {
         if (!db.objectStoreNames.contains("solves")) {
           const solves = db.createObjectStore("solves", { keyPath: "id" });
           solves.createIndex("sessionId", "sessionId");
@@ -42,6 +42,23 @@ export function cubetimeDb(): Promise<IDBPDatabase<CubetimeDB>> {
         }
         if (!db.objectStoreNames.contains("settings")) {
           db.createObjectStore("settings");
+        }
+        if (oldVersion < 2) {
+          // v1 settings carried inspectionEnabled: boolean → inspectionMode.
+          const record = (await db.get("settings", SETTINGS_KEY)) as
+            | (SettingsRecord & { inspectionEnabled?: boolean })
+            | undefined;
+          if (record && typeof record.inspectionEnabled === "boolean") {
+            const { inspectionEnabled, ...rest } = record;
+            await db.put(
+              "settings",
+              {
+                ...rest,
+                inspectionMode: inspectionEnabled ? "wca" : "off",
+              },
+              SETTINGS_KEY,
+            );
+          }
         }
       },
       blocked() {

@@ -1,6 +1,16 @@
-import type { TimerEngine, TimerPhase } from "./types";
+import type {
+  InspectionMode,
+  TimerEngine,
+  TimerPenalty,
+  TimerPhase,
+  TimerStop,
+} from "./types";
 
 export const HOLD_MS = 300;
+// WCA: start after 15.00s = +2, after 17.00s = DNF (of the ready call;
+// here the inspection start plays the role of that call).
+export const WCA_PLUS2_MS = 15_000;
+export const WCA_DNF_MS = 17_000;
 
 export interface TimerEngineOptions {
   holdToReady?: boolean;
@@ -11,9 +21,14 @@ export function createTimerEngine(
 ): TimerEngine {
   const holdToReady = options.holdToReady === true;
   let phase: TimerPhase = "idle";
+  let inspectionMode: InspectionMode = "off";
+  let inspStartTs: number | null = null;
+  let inspPrevPhase: TimerPhase = "idle";
+  let holdPrevPhase: TimerPhase = "idle";
   let startTs: number | null = null;
   let holdStartTs: number | null = null;
   let lastElapsed = 0;
+  let lastPenalty: TimerPenalty = "none";
   let readyTimer: ReturnType<typeof setTimeout> | null = null;
   const listeners = new Set<(phase: TimerPhase) => void>();
 
@@ -40,17 +55,31 @@ export function createTimerEngine(
     if (phase === "running") return;
     clearReadyTimer();
     holdStartTs = null;
+    if (inspStartTs !== null) {
+      const inspected = now() - inspStartTs;
+      lastPenalty =
+        inspectionMode === "wca"
+          ? inspected > WCA_DNF_MS
+            ? "dnf"
+            : inspected > WCA_PLUS2_MS
+              ? "plus2"
+              : "none"
+          : "none";
+      inspStartTs = null;
+    } else {
+      lastPenalty = "none";
+    }
     startTs = now();
     lastElapsed = 0;
     setPhase("running");
   };
 
-  const stop = (): number | null => {
+  const stop = (): TimerStop | null => {
     if (phase !== "running" || startTs === null) return null;
     lastElapsed = now() - startTs;
     startTs = null;
     setPhase("stopped");
-    return lastElapsed;
+    return { rawTimeMs: lastElapsed, penalty: lastPenalty };
   };
 
   return {
@@ -58,12 +87,41 @@ export function createTimerEngine(
       return phase;
     },
     holdToReady,
+    setInspection(mode) {
+      inspectionMode = mode;
+      if (mode === "off" && phase === "inspection") {
+        inspStartTs = null;
+        setPhase(inspPrevPhase);
+      }
+    },
+    startInspection() {
+      if (inspectionMode === "off") return false;
+      if (phase !== "idle" && phase !== "stopped") return false;
+      inspPrevPhase = phase;
+      inspStartTs = now();
+      lastPenalty = "none";
+      setPhase("inspection");
+      return true;
+    },
+    inspectionElapsedMs() {
+      if (phase === "inspection" && inspStartTs !== null) {
+        return now() - inspStartTs;
+      }
+      return 0;
+    },
     start,
     stop,
 
     arm() {
       if (!holdToReady) return;
-      if (phase !== "idle" && phase !== "stopped") return;
+      if (
+        phase !== "idle" &&
+        phase !== "stopped" &&
+        phase !== "inspection"
+      ) {
+        return;
+      }
+      holdPrevPhase = phase;
       clearReadyTimer();
       holdStartTs = now();
       lastElapsed = 0;
@@ -80,7 +138,7 @@ export function createTimerEngine(
         const held = holdStartTs === null ? 0 : now() - holdStartTs;
         holdStartTs = null;
         if (held >= HOLD_MS) start();
-        else setPhase("idle");
+        else setPhase(holdPrevPhase);
         return;
       }
       if (phase === "ready") {
@@ -90,10 +148,16 @@ export function createTimerEngine(
     },
 
     cancel() {
-      if (phase !== "holding" && phase !== "ready") return;
-      clearReadyTimer();
-      holdStartTs = null;
-      setPhase("idle");
+      if (phase === "holding" || phase === "ready") {
+        clearReadyTimer();
+        holdStartTs = null;
+        setPhase(holdPrevPhase);
+        return;
+      }
+      if (phase === "inspection") {
+        inspStartTs = null;
+        setPhase(inspPrevPhase);
+      }
     },
 
     elapsedMs() {

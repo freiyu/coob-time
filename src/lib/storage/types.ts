@@ -25,7 +25,7 @@ export interface SessionRecord {
 export interface SettingsRecord {
   defaultPuzzleId: string;
   startMode: "press" | "hold";
-  inspectionEnabled: boolean;
+  inspectionMode: "off" | "15s" | "wca";
   soundEnabled: boolean;
   theme: "dark" | "light" | "system";
   autoNextScramble: boolean;

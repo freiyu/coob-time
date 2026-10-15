@@ -2,6 +2,11 @@ import { useState } from "react";
 import { Trash2 } from "lucide-react";
 import Dialog from "@/components/dialog";
 import ScrambleView from "@/components/scramble-view";
+import {
+  BUTTON_DESTRUCTIVE,
+  BUTTON_PRIMARY,
+  BUTTON_SECONDARY,
+} from "@/components/data-panel";
 import { type PuzzleId } from "@/lib/puzzles";
 import type { Penalty, SolveRecord } from "@/lib/storage/types";
 import { aoN, bestAoN, effectiveMs, formatMs, parseMs } from "@/lib/statistics";
@@ -127,7 +132,7 @@ export default function SolveHistory({
               setManualError(null);
               setManualOpen(true);
             }}
-            className="h-9 rounded-lg border border-border px-3 text-sm font-medium text-secondary-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className={BUTTON_SECONDARY}
           >
             + Add solve
           </button>
@@ -137,7 +142,8 @@ export default function SolveHistory({
         <div className="px-4 py-10 text-center sm:px-6">
           <p className="text-sm font-medium">No solves yet</p>
           <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
-            Stop the timer to record your first solve. Nothing is synced.
+            Stop the timer to record your first solve, or add one manually with
+            Add solve above. Nothing is synced.
           </p>
         </div>
       ) : (
@@ -242,7 +248,7 @@ export default function SolveHistory({
                           }}
                           className={`rounded px-1 font-medium hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                             ao5 === null
-                              ? "text-muted-foreground"
+                              ? "text-destructive"
                               : isBest5
                                 ? "text-pb-foreground"
                                 : "text-warning-foreground"
@@ -269,7 +275,7 @@ export default function SolveHistory({
                           }}
                           className={`rounded px-1 font-medium hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                             ao12 === null
-                              ? "text-muted-foreground"
+                              ? "text-destructive"
                               : isBest12
                                 ? "text-pb-foreground"
                                 : "text-info-foreground"
@@ -346,9 +352,11 @@ export default function SolveHistory({
               <div className="mt-2 flex justify-end">
                 <button
                   type="button"
-                  disabled={notesDraft === (detail.solve.notes ?? "")}
+                  disabled={
+                    notesDraft.trim() === (detail.solve.notes ?? "").trim()
+                  }
                   onClick={() => onSetNotes(detail.solve.id, notesDraft)}
-                  className="h-9 rounded-lg bg-brand px-3 text-sm font-medium text-white transition-colors duration-150 hover:bg-brand-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+                  className={BUTTON_PRIMARY}
                 >
                   Save note
                 </button>
@@ -394,7 +402,7 @@ export default function SolveHistory({
               <button
                 type="button"
                 onClick={() => setConfirmId(null)}
-                className="h-10 rounded-lg border border-border px-4 text-sm font-medium text-secondary-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className={BUTTON_SECONDARY}
               >
                 Cancel
               </button>
@@ -407,7 +415,7 @@ export default function SolveHistory({
                   }
                   setConfirmId(null);
                 }}
-                className="h-10 rounded-lg bg-destructive px-4 text-sm font-medium text-destructive-foreground transition-colors duration-150 hover:bg-destructive/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className={BUTTON_DESTRUCTIVE}
               >
                 Delete
               </button>
@@ -467,14 +475,23 @@ export default function SolveHistory({
               Time
               <input
                 value={manualText}
-                onChange={(event) => setManualText(event.target.value)}
+                onChange={(event) => {
+                  setManualText(event.target.value);
+                  setManualError(null);
+                }}
                 autoFocus
                 placeholder="12.34 or 1:05.12"
+                aria-invalid={manualError !== null}
+                aria-describedby={manualError ? "manual-time-error" : undefined}
                 className="mt-1.5 h-10 w-full rounded-lg border border-input bg-card px-3 text-sm tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               />
             </label>
             {manualError && (
-              <p role="alert" className="text-sm text-danger-foreground">
+              <p
+                id="manual-time-error"
+                role="alert"
+                className="text-sm text-destructive"
+              >
                 {manualError}
               </p>
             )}
@@ -482,14 +499,11 @@ export default function SolveHistory({
               <button
                 type="button"
                 onClick={() => setManualOpen(false)}
-                className="h-10 rounded-lg border border-border px-4 text-sm font-medium text-secondary-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className={BUTTON_SECONDARY}
               >
                 Cancel
               </button>
-              <button
-                type="submit"
-                className="h-10 rounded-lg bg-brand px-4 text-sm font-medium text-white transition-colors duration-150 hover:bg-brand-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
+              <button type="submit" className={BUTTON_PRIMARY}>
                 Add solve
               </button>
             </div>

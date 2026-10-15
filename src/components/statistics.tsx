@@ -19,13 +19,18 @@ interface StatCardProps {
   value: string;
   sub?: string;
   pb?: boolean;
+  danger?: boolean;
 }
 
-function StatCard({ label, value, sub, pb }: StatCardProps) {
+function StatCard({ label, value, sub, pb, danger }: StatCardProps) {
   return (
     <div className="rounded-[14px] border border-border bg-card p-4">
       <p className="text-sm font-medium text-muted-foreground">{label}</p>
-      <p className="mt-1.5 text-xl font-semibold tabular-nums sm:text-2xl">
+      <p
+        className={`mt-1.5 text-xl font-semibold tabular-nums sm:text-2xl ${
+          danger ? "text-destructive" : ""
+        }`}
+      >
         {value}
       </p>
       {pb && (
@@ -186,29 +191,33 @@ export default function Statistics({ solves }: StatisticsProps) {
     { label: "Solves", value: String(count), sub: "in this session" },
     best !== null
       ? { label: "Best single", value: formatMs(best), pb: count > 1 }
-      : { label: "Best single", ...notEnough() },
+      : count > 0
+        ? { label: "Best single", value: "DNF", sub: "No valid solves", danger: true }
+        : { label: "Best single", ...notEnough() },
     avg !== null
       ? { label: "Mean", value: formatMs(avg), sub: "valid solves" }
-      : { label: "Mean", ...notEnough() },
+      : count > 0
+        ? { label: "Mean", value: "DNF", sub: "No valid solves", danger: true }
+        : { label: "Mean", ...notEnough() },
     currentAo5 !== null
       ? { label: "Ao5", value: formatMs(currentAo5) }
       : count >= 5
-        ? { label: "Ao5", value: "DNF" }
+        ? { label: "Ao5", value: "DNF", danger: true }
         : { label: "Ao5", ...notEnough() },
     currentAo12 !== null
       ? { label: "Ao12", value: formatMs(currentAo12) }
       : count >= 12
-        ? { label: "Ao12", value: "DNF" }
+        ? { label: "Ao12", value: "DNF", danger: true }
         : { label: "Ao12", ...notEnough() },
     topAo5 !== null
       ? { label: "Best Ao5", value: formatMs(topAo5) }
       : count >= 5
-        ? { label: "Best Ao5", value: "DNF" }
+        ? { label: "Best Ao5", value: "DNF", danger: true }
         : { label: "Best Ao5", ...notEnough() },
     topAo12 !== null
       ? { label: "Best Ao12", value: formatMs(topAo12) }
       : count >= 12
-        ? { label: "Best Ao12", value: "DNF" }
+        ? { label: "Best Ao12", value: "DNF", danger: true }
         : { label: "Best Ao12", ...notEnough() },
   ];
 

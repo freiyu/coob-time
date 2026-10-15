@@ -34,11 +34,11 @@ function errorMessage(err: unknown): string {
   return "That change could not be written to local storage. Export a backup, then try again.";
 }
 
-const BUTTON_BASE =
+export const BUTTON_BASE =
   "flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50";
-const BUTTON_SECONDARY = `${BUTTON_BASE} border border-border bg-secondary text-secondary-foreground hover:bg-muted`;
-const BUTTON_PRIMARY = `${BUTTON_BASE} bg-primary text-primary-foreground hover:bg-primary/90`;
-const BUTTON_DESTRUCTIVE = `${BUTTON_BASE} bg-destructive text-destructive-foreground hover:bg-destructive/90`;
+export const BUTTON_SECONDARY = `${BUTTON_BASE} border border-border bg-secondary text-secondary-foreground hover:bg-muted`;
+export const BUTTON_PRIMARY = `${BUTTON_BASE} bg-primary text-primary-foreground hover:bg-primary/90`;
+export const BUTTON_DESTRUCTIVE = `${BUTTON_BASE} bg-destructive text-destructive-foreground hover:bg-destructive/90`;
 
 export default function DataPanel({
   sessions,

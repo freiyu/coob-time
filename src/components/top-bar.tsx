@@ -4,6 +4,11 @@ import { useState } from "react";
 import { Box, HelpCircle, Monitor, Moon, Pencil, Plus, Settings, Sun, Trash2 } from "lucide-react";
 import Dialog from "@/components/dialog";
 import Menu, { type MenuItem } from "@/components/menu";
+import {
+  BUTTON_DESTRUCTIVE,
+  BUTTON_PRIMARY,
+  BUTTON_SECONDARY,
+} from "@/components/data-panel";
 import { PUZZLES, type Puzzle, type PuzzleId } from "@/lib/puzzles";
 
 export type ThemeChoice = "dark" | "light" | "system";
@@ -28,6 +33,9 @@ interface TopBarProps {
   onThemeChange: (theme: ThemeChoice) => void;
   selectionLocked: boolean;
 }
+
+const KBD_CLS =
+  "rounded-lg border border-border bg-muted px-2 py-0.5 text-sm font-semibold";
 
 const themeOptions: { value: ThemeChoice; label: string; icon: React.ReactNode }[] = [
   { value: "dark", label: "Dark", icon: <Moon aria-hidden className="size-4" /> },
@@ -185,14 +193,14 @@ export default function TopBar({
               <button
                 type="button"
                 onClick={() => setDialog(null)}
-                className="h-10 rounded-lg border border-border px-4 text-sm font-medium text-secondary-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className={BUTTON_SECONDARY}
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={!draftName.trim()}
-                className="h-10 rounded-lg bg-brand px-4 text-sm font-medium text-white transition-colors duration-150 hover:bg-brand-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+                className={BUTTON_PRIMARY}
               >
                 Save
               </button>
@@ -205,29 +213,26 @@ export default function TopBar({
           <ul className="space-y-2 p-4 text-sm">
             <li className="flex items-center justify-between gap-4">
               <span>Start / stop the timer</span>
-              <kbd className="rounded-lg border border-border bg-muted px-2 py-0.5 text-sm font-semibold">Space</kbd>
+              <kbd className={KBD_CLS}>Space</kbd>
             </li>
             <li className="flex items-center justify-between gap-4">
-              <span>Generate a new scramble</span>
-              <kbd className="rounded-lg border border-border bg-muted px-2 py-0.5 text-sm font-semibold">N</kbd>
+              <span>Generate a new scramble (while stopped)</span>
+              <kbd className={KBD_CLS}>N</kbd>
             </li>
             <li className="flex items-center justify-between gap-4">
               <span>Toggle DNF on the last stopped solve</span>
-              <kbd className="rounded-lg border border-border bg-muted px-2 py-0.5 text-sm font-semibold">D</kbd>
+              <kbd className={KBD_CLS}>D</kbd>
             </li>
             <li className="flex items-center justify-between gap-4">
               <span>Cancel the ready state / close a popup</span>
-              <kbd className="rounded-lg border border-border bg-muted px-2 py-0.5 text-sm font-semibold">Esc</kbd>
-            </li>
-            <li className="flex items-center justify-between gap-4">
-              <span>+2 goes through the visible buttons (history or timer)</span>
-              <kbd className="rounded-lg border border-border bg-muted px-2 py-0.5 text-sm font-semibold">—</kbd>
+              <kbd className={KBD_CLS}>Esc</kbd>
             </li>
           </ul>
           <p className="border-t border-border px-4 py-3 text-sm text-muted-foreground">
             In hold mode, press and hold Space until Ready, then release to
             start. Shortcuts are ignored while typing in a field or while a
-            popup is open.
+            popup is open. +2 goes through the visible buttons in the history
+            or under the timer.
           </p>
         </Dialog>
       )}
@@ -247,7 +252,7 @@ export default function TopBar({
               <button
                 type="button"
                 onClick={() => setDialog(null)}
-                className="h-10 rounded-lg border border-border px-4 text-sm font-medium text-secondary-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className={BUTTON_SECONDARY}
               >
                 Cancel
               </button>
@@ -257,7 +262,7 @@ export default function TopBar({
                   onDeleteSession();
                   setDialog(null);
                 }}
-                className="h-10 rounded-lg bg-destructive px-4 text-sm font-medium text-destructive-foreground transition-colors duration-150 hover:bg-destructive/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className={BUTTON_DESTRUCTIVE}
               >
                 Delete
               </button>

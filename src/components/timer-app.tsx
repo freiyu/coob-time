@@ -117,6 +117,9 @@ export default function TimerApp() {
   >(null);
   const [dataPanelOpen, setDataPanelOpen] = useState(false);
   const hydratedOnceRef = useRef(false);
+  // The solve created by the most recent timer stop; manual entries must
+  // never steal the pending (+2/DNF) slot from it.
+  const [pendingSolveId, setPendingSolveId] = useState<string | null>(null);
   const [scrambleState, setScrambleState] = useState<ScrambleState>({
     status: "generating",
     scramble: "",
@@ -273,19 +276,8 @@ export default function TimerApp() {
       .catch(persistFailure);
   };
 
-  const handleSolve = (rawTimeMs: number) => {
-    const now = new Date().toISOString();
-    const record: SolveRecord = {
-      id: crypto.randomUUID(),
-      sessionId: session.id,
-      puzzleId,
-      rawTimeMs,
-      penalty: "none",
-      scramble: scrambleState.scramble,
-      createdAt: now,
-      source: "timer",
-      schemaVersion: 1,
-    };
+  const appendSolve = (record: SolveRecord) => {
+    const now = record.createdAt;
     const sessionRecord = toSessionRecord({
       ...session,
       createdAt: session.createdAt === INITIAL_STAMP ? now : session.createdAt,
@@ -313,13 +305,33 @@ export default function TimerApp() {
       return next;
     });
     persistSolveRecord(record, sessionRecord);
+  };
+
+  const handleSolve = (rawTimeMs: number) => {
+    const now = new Date().toISOString();
+    const record: SolveRecord = {
+      id: crypto.randomUUID(),
+      sessionId: session.id,
+      puzzleId,
+      rawTimeMs,
+      penalty: "none",
+      scramble: scrambleState.scramble,
+      createdAt: now,
+      source: "timer",
+      schemaVersion: 1,
+    };
+    setPendingSolveId(record.id);
+    appendSolve(record);
     generateFresh(puzzleId);
   };
 
-  const handleSetPenalty = (solveId: string, penalty: Penalty) => {
+  const updateSolve = (
+    solveId: string,
+    transform: (solve: SolveRecord) => SolveRecord,
+  ) => {
     const target = solves.find((candidate) => candidate.id === solveId);
     if (!target) return;
-    const updated: SolveRecord = { ...target, penalty };
+    const updated = transform(target);
     const now = new Date().toISOString();
     setSessions((prev) =>
       prev.map((candidate) =>
@@ -343,14 +355,19 @@ export default function TimerApp() {
       .catch(persistFailure);
   };
 
+  const handleSetPenalty = (solveId: string, penalty: Penalty) => {
+    updateSolve(solveId, (solve) => ({ ...solve, penalty }));
+  };
+
   const handleToggleDnf = () => {
-    const last = solves.at(-1);
-    if (!last) return;
-    handleSetPenalty(last.id, last.penalty === "dnf" ? "none" : "dnf");
+    const pending = solves.find(
+      (candidate) => candidate.id === pendingSolveId,
+    );
+    if (!pending) return;
+    handleSetPenalty(pending.id, pending.penalty === "dnf" ? "none" : "dnf");
   };
 
   const handleAddManual = (rawTimeMs: number) => {
-    const now = new Date().toISOString();
     const record: SolveRecord = {
       id: crypto.randomUUID(),
       sessionId: session.id,
@@ -358,64 +375,21 @@ export default function TimerApp() {
       rawTimeMs,
       penalty: "none",
       scramble: "",
-      createdAt: now,
+      createdAt: new Date().toISOString(),
       source: "manual",
       schemaVersion: 1,
     };
-    const sessionRecord = toSessionRecord({
-      ...session,
-      createdAt: session.createdAt === INITIAL_STAMP ? now : session.createdAt,
-      updatedAt: now,
-    });
-    setSessions((prev) => {
-      const index = prev.findIndex((candidate) => candidate.id === session.id);
-      if (index === -1) {
-        return [
-          ...prev,
-          {
-            ...session,
-            createdAt: sessionRecord.createdAt,
-            updatedAt: now,
-            solves: [record],
-          },
-        ];
-      }
-      const next = [...prev];
-      next[index] = {
-        ...next[index],
-        updatedAt: now,
-        solves: [...next[index].solves, record],
-      };
-      return next;
-    });
-    persistSolveRecord(record, sessionRecord);
+    appendSolve(record);
   };
 
   const handleSetNotes = (solveId: string, notes: string) => {
-    const target = solves.find((candidate) => candidate.id === solveId);
-    if (!target) return;
-    const updated: SolveRecord = { ...target };
-    if (notes.trim() === "") delete updated.notes;
-    else updated.notes = notes;
-    setSessions((prev) =>
-      prev.map((candidate) =>
-        candidate.id !== session.id
-          ? candidate
-          : {
-              ...candidate,
-              solves: candidate.solves.map((solve) =>
-                solve.id === solveId ? updated : solve,
-              ),
-            },
-      ),
-    );
-    setSaveState("saving");
-    putSolve(updated)
-      .then(() => {
-        setSaveState("saved");
-        setSaveNotice(null);
-      })
-      .catch(persistFailure);
+    const trimmed = notes.trim();
+    updateSolve(solveId, (solve) => {
+      const updated: SolveRecord = { ...solve };
+      if (trimmed === "") delete updated.notes;
+      else updated.notes = notes;
+      return updated;
+    });
   };
 
   const handleNewScramble = () => {
@@ -521,7 +495,9 @@ export default function TimerApp() {
   };
 
   const pendingSolve =
-    phase === "stopped" ? (solves.at(-1) ?? null) : null;
+    phase === "stopped"
+      ? (solves.find((s) => s.id === pendingSolveId) ?? null)
+      : null;
   const ao5 = aoN(solves, 5);
   const pbMs = bestSingle(solves);
 

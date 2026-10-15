@@ -383,7 +383,7 @@ export default function SolveHistory({
             <p className="text-2xl font-semibold tabular-nums">
               {formatMs(aoWindow.value)}
             </p>
-            <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+            <div className="mt-3 flex flex-wrap gap-2">
               {aoWindow.window.map((solve, index) => {
                 const value = effectiveMs(solve);
                 const isCurrent = index === aoWindow.window.length - 1;

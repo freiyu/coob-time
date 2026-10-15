@@ -103,7 +103,7 @@ export default function SolveHistory({
   return (
     <section
       aria-label="Solve history"
-      className="flex max-h-[70vh] min-h-0 flex-col rounded-[14px] border border-border bg-card lg:h-full lg:max-h-none"
+      className="flex min-h-0 flex-col rounded-[14px] border border-border bg-card lg:h-full"
     >
       <header className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3 sm:px-6">
         <h2 className="text-sm font-semibold">Solve history</h2>

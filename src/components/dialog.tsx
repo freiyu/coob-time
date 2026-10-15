@@ -6,10 +6,12 @@ import { X } from "lucide-react";
 export default function Dialog({
   title,
   onClose,
+  wide,
   children,
 }: {
   title: string;
   onClose: () => void;
+  wide?: boolean;
   children: React.ReactNode;
 }) {
   useEffect(() => {
@@ -32,7 +34,7 @@ export default function Dialog({
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="relative w-full max-w-md rounded-[14px] border border-border bg-card shadow-lg"
+        className={`relative w-full ${wide ? "max-w-2xl" : "max-w-md"} rounded-[14px] border border-border bg-card shadow-lg`}
       >
         <header className="flex items-center justify-between border-b border-border px-4 py-3">
           <h3 className="text-sm font-semibold">{title}</h3>

@@ -561,7 +561,7 @@ export default function TimerApp() {
           </div>
         </div>
         <div
-          className={`grid min-h-0 flex-1 items-start gap-4 overflow-y-auto lg:grid-cols-2 lg:items-stretch lg:overflow-hidden sm:gap-6 ${fadeCls}`}
+          className={`grid min-h-0 flex-1 grid-rows-2 gap-4 lg:grid-cols-2 lg:grid-rows-none sm:gap-6 ${fadeCls}`}
           aria-hidden={focused}
           inert={focused}
         >
@@ -587,7 +587,7 @@ export default function TimerApp() {
         </p>
       </footer>
       {dataPanelOpen && (
-        <Dialog title="Data and settings" onClose={() => setDataPanelOpen(false)}>
+        <Dialog title="Data and settings" wide onClose={() => setDataPanelOpen(false)}>
           <div className="max-h-[75vh] overflow-y-auto p-1">
             <DataPanel
               sessions={sessions.map(toSessionRecord)}

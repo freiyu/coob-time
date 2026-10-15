@@ -113,20 +113,29 @@ export default function TimerCard({
         : "Press Space to start";
   // Inspection stays count-up; WCA turns orange at 15s and red at 17s,
   // the 15s mode only warns (no penalties). WCA A4d: 15.00 itself is +2.
-  const inspectionCue =
-    inspectionMode === "wca" && insp >= 17_000
-      ? "Start now = DNF"
-      : inspectionMode === "wca" && insp >= 15_000
-        ? "Start now = +2"
-        : insp >= 15_000
-          ? "15s up — start whenever"
-          : `Inspection — ${holdMode ? "hold" : "press"} Space`;
   const inspectionDanger = inspectionMode === "wca" && insp >= 17_000;
   const inspectionWarn =
     insp >= 15_000 && (inspectionMode === "wca" || inspectionMode === "15s");
+  // Tone line only when the start is actually at stake (WCA / 15s warning).
+  const cueTone = inspectionDanger
+    ? "Start now = DNF"
+    : inspectionWarn
+      ? inspectionMode === "wca"
+        ? "Start now = +2"
+        : "15s up — start whenever"
+      : null;
 
   const label = showInspection
-    ? inspectionCue
+    ? phase === "holding"
+      ? cueTone
+        ? `Hold… — ${cueTone}`
+        : "Hold…"
+      : phase === "ready"
+        ? cueTone
+          ? `Ready — ${cueTone}`
+          : "Ready"
+        : (cueTone ??
+          `Inspection — ${holdMode ? "hold" : "press"} Space`)
     : phase === "idle"
       ? scrambleReady
         ? idleCopy

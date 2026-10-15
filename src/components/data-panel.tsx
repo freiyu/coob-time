@@ -243,7 +243,7 @@ export default function DataPanel({
                 ["15s", "15 seconds (guidance only, no penalties)"],
                 [
                   "wca",
-                  "WCA — +2 if you start after 15s, DNF after 17s",
+                  "WCA — +2 at 15s, DNF at 17s",
                 ],
               ] as const
             ).map(([value, label]) => (

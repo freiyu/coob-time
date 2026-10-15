@@ -221,6 +221,18 @@ describe("inspection", () => {
     expect(engine.inspectionElapsedMs()).toBe(0);
   });
 
+  it("turning inspection off while holding from an inspection drops it", () => {
+    const engine = createTimerEngine({ holdToReady: true });
+    engine.setInspection("wca");
+    engine.startInspection();
+    now += 16_000;
+    engine.arm();
+    expect(engine.phase).toBe("holding");
+    engine.setInspection("off");
+    expect(engine.phase).toBe("idle");
+    expect(engine.inspectionElapsedMs()).toBe(0);
+  });
+
   it("a solve started without inspection records penalty none", () => {
     const engine = createTimerEngine();
     engine.setInspection("wca");

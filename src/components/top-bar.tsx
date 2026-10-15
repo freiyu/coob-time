@@ -229,11 +229,12 @@ export default function TopBar({
             </li>
           </ul>
           <p className="border-t border-border px-4 py-3 text-sm text-muted-foreground">
-            With inspection on, the first Space starts inspection; hold Space
-            during inspection to start the solve. In hold mode, press and hold
-            Space until Ready, then release to start. Shortcuts are ignored
-            while typing in a field or while a popup is open. +2 goes through
-            the visible buttons in the history or under the timer.
+            With inspection on, the first Space starts inspection; hold (or
+            press, in press mode) Space during inspection to start the solve.
+            In hold mode, press and hold Space until Ready, then release to
+            start. Shortcuts are ignored while typing in a field or while a
+            popup is open. +2 goes through the visible buttons in the history
+            or under the timer.
           </p>
         </Dialog>
       )}

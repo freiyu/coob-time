@@ -89,7 +89,16 @@ export function createTimerEngine(
     holdToReady,
     setInspection(mode) {
       inspectionMode = mode;
-      if (mode === "off" && phase === "inspection") {
+      // Turning inspection off must abandon any inspection-backed phase,
+      // including a hold started from inspection, so no stale +2/DNF sticks.
+      if (
+        mode === "off" &&
+        (phase === "inspection" ||
+          ((phase === "holding" || phase === "ready") &&
+            inspStartTs !== null))
+      ) {
+        clearReadyTimer();
+        holdStartTs = null;
         inspStartTs = null;
         setPhase(inspPrevPhase);
       }

@@ -271,36 +271,14 @@ export default function SolveHistory({
                       className="px-4 py-2.5 text-right sm:px-6"
                       onClick={(event) => event.stopPropagation()}
                     >
-                      {confirmId === solve.id ? (
-                        <span className="inline-flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              onDelete(solve.id);
-                              setConfirmId(null);
-                            }}
-                            className="rounded-lg bg-destructive px-3 py-1.5 text-sm font-medium text-destructive-foreground transition-colors duration-150 hover:bg-destructive/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                          >
-                            Delete
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setConfirmId(null)}
-                            className="rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-secondary-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                          >
-                            Cancel
-                          </button>
-                        </span>
-                      ) : (
-                        <button
-                          type="button"
-                          aria-label={`Delete solve ${number}`}
-                          onClick={() => setConfirmId(solve.id)}
-                          className="rounded-lg p-2 text-muted-foreground transition-colors hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                        >
-                          <Trash2 aria-hidden className="size-4" />
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        aria-label={`Delete solve ${number}`}
+                        onClick={() => setConfirmId(solve.id)}
+                        className="rounded-lg p-2 text-muted-foreground transition-colors hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      >
+                        <Trash2 aria-hidden className="size-4" />
+                      </button>
                     </td>
                   </tr>
                 );
@@ -345,6 +323,52 @@ export default function SolveHistory({
                   scramble={detail.solve.scramble}
                 />
               )}
+            </div>
+          </div>
+        </Dialog>
+      )}
+
+      {confirmId && (
+        <Dialog
+          title="Delete solve"
+          onClose={() => setConfirmId(null)}
+        >
+          <div className="space-y-3 p-4">
+            <p className="text-sm">
+              Are you sure you want to delete this solve?{" "}
+              {(() => {
+                const target = rows.find((row) => row.solve.id === confirmId);
+                if (!target) return null;
+                const value = effectiveMs(target.solve);
+                return (
+                  <span className="font-semibold tabular-nums">
+                    #{target.number} ·{" "}
+                    {value === null ? "DNF" : formatMs(value)}
+                  </span>
+                );
+              })()}
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setConfirmId(null)}
+                className="h-10 rounded-lg border border-border px-4 text-sm font-medium text-secondary-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const target = rows.find((row) => row.solve.id === confirmId);
+                  if (target) {
+                    onDelete(target.solve.id);
+                  }
+                  setConfirmId(null);
+                }}
+                className="h-10 rounded-lg bg-destructive px-4 text-sm font-medium text-destructive-foreground transition-colors duration-150 hover:bg-destructive/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                Delete
+              </button>
             </div>
           </div>
         </Dialog>

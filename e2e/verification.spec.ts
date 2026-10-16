@@ -495,6 +495,28 @@ await test.step("S. best-stat popups", async () => {
 
   check("Ao12 not clickable at 5 solves", (await page.getByRole("button", { name: /Best Ao12/ }).count()) === 0
     && (await page.getByRole("button", { name: /^Ao12/ }).count()) === 0);
+
+  const sol = page.locator('section[aria-label="Statistics"] .grid > *').first();
+  const statsSection = page.locator('section[aria-label="Statistics"]');
+  const m0 = (await sol.innerText()).match(/(\d+)\/(\d+)/);
+  check("Solves card shows valid/total", m0 !== null, (await sol.innerText()).replace(/\n/g, " | "));
+  check("Solves denominator equals total rows", m0 !== null && Number(m0[2]) === n, m0?.[0] ?? "?");
+  const secTxt = await statsSection.innerText();
+  check("redundant card copy removed", !secTxt.includes("in this session") && !secTxt.includes("valid solves"));
+
+  const newestRow = page.locator("tbody tr").first();
+  await newestRow.getByRole("button", { name: /^Toggle DNF on solve/ }).click();
+  await page.waitForTimeout(150);
+  const afterDnf = (await sol.innerText()).match(/(\d+)\/(\d+)/);
+  check(
+    "DNF lowers the valid count",
+    m0 !== null && afterDnf !== null && Number(afterDnf[1]) === Number(m0[1]) - 1 && afterDnf[2] === m0[2],
+    afterDnf?.[0] ?? "?",
+  );
+  await newestRow.getByRole("button", { name: /^Toggle DNF on solve/ }).click();
+  await page.waitForTimeout(150);
+  const restored = (await sol.innerText()).match(/(\d+)\/(\d+)/);
+  check("ratio restored after un-DNF", m0 !== null && restored !== null && restored[0] === m0[0], restored?.[0] ?? "?");
 });
 
 });

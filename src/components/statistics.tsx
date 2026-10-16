@@ -48,13 +48,17 @@ function StatCard({ label, value, sub, pb, danger, onOpen }: StatCardProps) {
     </>
   );
   if (!onOpen) {
-    return <div className="rounded-[14px] border border-border bg-card p-4">{inner}</div>;
+    return (
+      <div className="flex flex-col items-start rounded-[14px] border border-border bg-card p-4 text-left">
+        {inner}
+      </div>
+    );
   }
   return (
     <button
       type="button"
       onClick={onOpen}
-      className="w-full cursor-pointer rounded-[14px] border border-border bg-card p-4 text-left transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="flex w-full cursor-pointer flex-col items-start rounded-[14px] border border-border bg-card p-4 text-left transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       {inner}
     </button>
@@ -216,8 +220,10 @@ export default function Statistics({ solves }: StatisticsProps) {
   const topAo5End = topAo5 === null ? null : bestAoNEnd(solves, 5);
   const topAo12End = topAo12 === null ? null : bestAoNEnd(solves, 12);
 
+  const validCount = solves.filter((solve) => effectiveMs(solve) !== null).length;
+
   const cards: StatCardProps[] = [
-    { label: "Solves", value: String(count), sub: "in this session" },
+    { label: "Solves", value: `${validCount}/${count}` },
     best !== null
       ? {
           label: "Best single",
@@ -231,7 +237,7 @@ export default function Statistics({ solves }: StatisticsProps) {
         ? { label: "Best single", value: "DNF", sub: "No valid solves", danger: true }
         : { label: "Best single", ...notEnough() },
     avg !== null
-      ? { label: "Mean", value: formatMs(avg), sub: "valid solves" }
+      ? { label: "Mean", value: formatMs(avg) }
       : count > 0
         ? { label: "Mean", value: "DNF", sub: "No valid solves", danger: true }
         : { label: "Mean", ...notEnough() },

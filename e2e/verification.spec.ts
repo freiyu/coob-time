@@ -459,6 +459,25 @@ await test.step("S. best-stat popups", async () => {
   await page.locator('[role="dialog"]').waitFor();
   const dlg1 = await page.locator('[role="dialog"]').innerText();
   check("single popup shows solve number", /Solve #\d+/.test(dlg1), dlg1.replace(/\n/g, " | ").slice(0, 120));
+  check("single popup has scramble block", /Scramble\s*\n\s*\S/.test(dlg1), dlg1.replace(/\n/g, " | ").slice(-160));
+  const viewCount = await page.locator('[role="dialog"] div[aria-hidden][class*="h-44"]').count();
+  check("single popup renders scramble view", viewCount === 1, viewCount);
+  await page.keyboard.press("Escape");
+  await page.waitForSelector('[role="dialog"]', { state: "detached" });
+
+  const curAo5 = page.getByRole("button", { name: /^Ao5/ });
+  check("current Ao5 card is clickable", (await curAo5.count()) === 1, await curAo5.count());
+  await curAo5.click();
+  await page.locator('[role="dialog"]').waitFor();
+  const dlgCur = await page.locator('[role="dialog"]').innerText();
+  check("current Ao5 popup title", dlgCur.includes("Ao5") && !dlgCur.includes("Best"), dlgCur.replace(/\n/g, " | ").slice(0, 120));
+  check("current Ao5 range ends at newest", new RegExp(`Solves #\\d+–#${n}$`).test(dlgCur.trim().split("\n").find((l) => /^Solves #/.test(l)) || ""), dlgCur.replace(/\n/g, " | ").slice(0, 160));
+  const chip = page.locator('[role="dialog"] button.tabular-nums').first();
+  check("current Ao5 has 5 chips", (await page.locator('[role="dialog"] button.tabular-nums').count()) === 5);
+  await chip.click();
+  await page.locator('[role="dialog"]').waitFor();
+  const dlgChip = await page.locator('[role="dialog"]').innerText();
+  check("chip opens the solve popup", /Solve #\d+/.test(dlgChip) && dlgChip.includes("Scramble"), dlgChip.replace(/\n/g, " | ").slice(0, 160));
   await page.keyboard.press("Escape");
   await page.waitForSelector('[role="dialog"]', { state: "detached" });
 
@@ -467,14 +486,15 @@ await test.step("S. best-stat popups", async () => {
   await ao5.click();
   await page.locator('[role="dialog"]').waitFor();
   const dlg2 = await page.locator('[role="dialog"]').innerText();
-  check("Ao5 popup title", dlg2.includes("Best Ao5"), dlg2.replace(/\n/g, " | ").slice(0, 120));
-  check("Ao5 popup window range", /Solves #\d+.+#\d+/.test(dlg2), dlg2.replace(/\n/g, " | ").slice(0, 160));
-  const chips = await page.locator('[role="dialog"] span.tabular-nums').count();
-  check("Ao5 popup has 5 chips", chips === 5, chips);
+  check("Best Ao5 popup title", dlg2.includes("Best Ao5"), dlg2.replace(/\n/g, " | ").slice(0, 120));
+  check("Best Ao5 popup window range", /Solves #\d+.+#\d+/.test(dlg2), dlg2.replace(/\n/g, " | ").slice(0, 160));
+  const chips = await page.locator('[role="dialog"] button.tabular-nums').count();
+  check("Best Ao5 popup has 5 chips", chips === 5, chips);
   await page.keyboard.press("Escape");
   await page.waitForSelector('[role="dialog"]', { state: "detached" });
 
-  check("Ao12 not clickable at 5 solves", (await page.getByRole("button", { name: /Best Ao12/ }).count()) === 0);
+  check("Ao12 not clickable at 5 solves", (await page.getByRole("button", { name: /Best Ao12/ }).count()) === 0
+    && (await page.getByRole("button", { name: /^Ao12/ }).count()) === 0);
 });
 
 });

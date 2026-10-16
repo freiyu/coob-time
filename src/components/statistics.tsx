@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Award } from "lucide-react";
 import Dialog from "@/components/dialog";
+import ScrambleView from "@/components/scramble-view";
+import { type PuzzleId } from "@/lib/puzzles";
 import type { SolveRecord } from "@/lib/storage/types";
 import {
   aoN,
@@ -199,7 +201,7 @@ export default function Statistics({ solves }: StatisticsProps) {
   const [tab, setTab] = useState<"stats" | "trend">("stats");
   const [popup, setPopup] = useState<
     | { kind: "single"; solve: SolveRecord }
-    | { kind: "ao"; n: number; end: number; value: number }
+    | { kind: "ao"; title: string; n: number; end: number; value: number }
     | null
   >(null);
   const count = solves.length;
@@ -234,12 +236,34 @@ export default function Statistics({ solves }: StatisticsProps) {
         ? { label: "Mean", value: "DNF", sub: "No valid solves", danger: true }
         : { label: "Mean", ...notEnough() },
     currentAo5 !== null
-      ? { label: "Ao5", value: formatMs(currentAo5) }
+      ? {
+          label: "Ao5",
+          value: formatMs(currentAo5),
+          onOpen: () =>
+            setPopup({
+              kind: "ao",
+              title: "Ao5",
+              n: 5,
+              end: solves.length,
+              value: currentAo5,
+            }),
+        }
       : count >= 5
         ? { label: "Ao5", value: "DNF", danger: true }
         : { label: "Ao5", ...notEnough() },
     currentAo12 !== null
-      ? { label: "Ao12", value: formatMs(currentAo12) }
+      ? {
+          label: "Ao12",
+          value: formatMs(currentAo12),
+          onOpen: () =>
+            setPopup({
+              kind: "ao",
+              title: "Ao12",
+              n: 12,
+              end: solves.length,
+              value: currentAo12,
+            }),
+        }
       : count >= 12
         ? { label: "Ao12", value: "DNF", danger: true }
         : { label: "Ao12", ...notEnough() },
@@ -248,7 +272,13 @@ export default function Statistics({ solves }: StatisticsProps) {
           label: "Best Ao5",
           value: formatMs(topAo5),
           onOpen: () =>
-            setPopup({ kind: "ao", n: 5, end: topAo5End, value: topAo5 }),
+            setPopup({
+              kind: "ao",
+              title: "Best Ao5",
+              n: 5,
+              end: topAo5End,
+              value: topAo5,
+            }),
         }
       : count >= 5
         ? { label: "Best Ao5", value: "DNF", danger: true }
@@ -258,7 +288,13 @@ export default function Statistics({ solves }: StatisticsProps) {
           label: "Best Ao12",
           value: formatMs(topAo12),
           onOpen: () =>
-            setPopup({ kind: "ao", n: 12, end: topAo12End, value: topAo12 }),
+            setPopup({
+              kind: "ao",
+              title: "Best Ao12",
+              n: 12,
+              end: topAo12End,
+              value: topAo12,
+            }),
         }
       : count >= 12
         ? { label: "Best Ao12", value: "DNF", danger: true }
@@ -341,6 +377,18 @@ export default function Statistics({ solves }: StatisticsProps) {
                 +2 penalty &middot; raw {formatMs(popup.solve.rawTimeMs)}
               </p>
             )}
+            <div className="mt-3">
+              <p className="text-sm font-medium">Scramble</p>
+              <p className="mt-1 break-words text-sm text-muted-foreground">
+                {popup.solve.scramble || "—"}
+              </p>
+              {popup.solve.scramble && (
+                <ScrambleView
+                  puzzleId={popup.solve.puzzleId as PuzzleId}
+                  scramble={popup.solve.scramble}
+                />
+              )}
+            </div>
           </div>
         </Dialog>
       )}
@@ -349,7 +397,7 @@ export default function Statistics({ solves }: StatisticsProps) {
           const start = popup.end - popup.n;
           const window = solves.slice(start, popup.end);
           return (
-            <Dialog title={`Best Ao${popup.n}`} onClose={() => setPopup(null)}>
+            <Dialog title={popup.title} onClose={() => setPopup(null)}>
               <div className="p-4">
                 <p className="text-2xl font-semibold tabular-nums">
                   {formatMs(popup.value)}
@@ -358,15 +406,20 @@ export default function Statistics({ solves }: StatisticsProps) {
                   Solves #{start + 1}&ndash;#{popup.end}
                 </p>
                 <div className="mt-3 grid grid-cols-6 gap-2">
-                  {window.map((solve) => {
+                  {window.map((solve, index) => {
                     const value = effectiveMs(solve);
+                    const shown = value === null ? "DNF" : formatMs(value);
+                    const num = start + index + 1;
                     return (
-                      <span
+                      <button
+                        type="button"
                         key={solve.id}
-                        className="shrink-0 rounded-lg border border-border px-2 py-1 text-sm tabular-nums text-muted-foreground"
+                        aria-label={`Solve #${num}, ${shown}`}
+                        onClick={() => setPopup({ kind: "single", solve })}
+                        className="shrink-0 cursor-pointer rounded-lg border border-border px-2 py-1 text-sm tabular-nums text-muted-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       >
-                        {value === null ? "DNF" : formatMs(value)}
-                      </span>
+                        {shown}
+                      </button>
                     );
                   })}
                 </div>

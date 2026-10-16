@@ -150,7 +150,6 @@ console.log("=== E. statistics don't mix puzzles ===");
 console.log("=== F. keyboard guards ===");
 {
   const n = await rows();
-  const scr = await getScramble();
   await page.getByRole("button", { name: "+ Add solve", exact: true }).click();
   await page.getByRole("textbox", { name: "Time" }).focus();
   await page.keyboard.press("Space");

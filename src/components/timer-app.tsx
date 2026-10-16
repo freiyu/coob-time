@@ -639,7 +639,7 @@ export default function TimerApp() {
           </div>
         </div>
         <div
-          className={`grid gap-4 sm:gap-6 grid-cols-[minmax(0,1fr)] locked:grid-cols-2 locked-fill ${fadeCls}`}
+          className={`grid gap-4 sm:gap-6 grid-cols-[minmax(0,1fr)] locked:grid-cols-2 locked:grid-rows-[minmax(0,1fr)] locked-fill ${fadeCls}`}
           aria-hidden={focused}
           inert={focused}
         >

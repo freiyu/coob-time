@@ -227,7 +227,7 @@ export default function Statistics({ solves }: StatisticsProps) {
   return (
     <section
       aria-label="Statistics"
-      className="flex min-w-0 flex-col rounded-[14px] border border-border bg-card"
+      className="flex min-h-0 min-w-0 flex-col rounded-[14px] border border-border bg-card"
     >
       <header
         role="tablist"

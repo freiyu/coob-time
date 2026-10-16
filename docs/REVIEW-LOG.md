@@ -104,4 +104,13 @@ Only the human supplies scores, satisfaction, bug notes, and the decision. Nobod
 - Satisfied / Not satisfied: (not stated; approval given via "fase 7 udh lulus tes")
 - Bug notes and requested revisions: (none listed). Square-1 scramble-view question dismissed — keep the 2D view as-is ("biarin aja"). Request to continue → next phase is Phase 8 (Deploy).
 - Prompt used: PRD Section 14 Phase 7 prompt
-- Human decision: Approve — 2026-10-16, quote: "udh biarin aja kalo gitu, berarti karena fase 7 udh lulus tes, kita lanjut fase 8". Tag `phase-7-approved` TO CREATE at 535fd94 (not yet created).
+- Human decision: Approve — 2026-10-16, quote: "udh biarin aja kalo gitu, berarti karena fase 7 udh lulus tes, kita lanjut fase 8". Tag `phase-7-approved` @ac64036 (created; docs commit on top of 535fd94).
+
+### Phase 8 — Deploy — 2026-10-16
+- Agent summary: GitHub main pushed (origin/main @90f30c8, github.com/freiyu/coob-time); Vercel connected via dashboard git integration (no env vars), live at https://coob-time.vercel.app/ (HTTP 200 reported). README rewritten (7c9a512) covering features, local-only data/privacy + backup guidance, setup, scripts, Playwright note, Vercel deploy/redeploy (§12.9). Production build verified locally; mid-phase human-requested touch-timer fix (90df555 + dca1f88, FR-T04 touch/pen reinstated, mouse inert, new e2e/touch-timer.spec.ts). Left out intentionally: CI, preview-deploy config, TestSprite (credits untouched).
+- Commands / tests and observed results (builder/caller-reported, not re-verified by auditor): lint ✓; typecheck ✓; vitest 63/63; playwright 5/5; next build exit 0; live smoke 11/11 vs production URL (desktop load, scramble, hold-start, stop+save, refresh persistence, JSON export, delete-all, merge-import, fresh-context isolation, mobile touch hold/tap). Known issues: one mid-phase Vercel build failure (90df555 e2e TS error) fixed at dca1f88; first smoke-script run failed on script bug, corrected. AUDIT findings (minor): uncommitted docs/CODEMAP.md delta in tree; README written pre-touch-fix so features list still says keyboard-only; report must end with "Stopped. Waiting for your approval."
+- Scores (applicable categories): (left blank — awaiting human)
+- Satisfied / Not satisfied: (pending)
+- Bug notes and requested revisions: (pending)
+- Prompt used: PRD Section 14 Phase 8 prompt + PRD §12 items 1–9
+- Human decision: (pending — last phase; tag `phase-8-approved` only after explicit approval)

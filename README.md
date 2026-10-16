@@ -4,7 +4,7 @@ A local-first speedcubing timer that runs entirely in your browser. Time solves,
 
 ## Features
 
-- Keyboard-only timer (hold Space to start, N for +2, D for DNF) with optional WCA inspection
+- Keyboard timer (hold Space to start, N for +2, D for DNF) with optional WCA inspection — on touch devices, hold the timer and lift to start, tap to stop
 - WCA-style scrambles for 10 puzzles (2×2 through 7×7, Megaminx, Square-1, Pyraminx, Skewb) via cubing.js, with 2D scramble views
 - Solve history with per-solve penalties, notes, manual entry, and rolling Ao5/Ao12
 - Session management (create, rename, delete)

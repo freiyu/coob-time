@@ -608,7 +608,7 @@ export default function TimerApp() {
         </div>
       )}
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-4 sm:gap-6 sm:px-6 locked-fill">
-        <div className="grid shrink-0 gap-4 lg:grid-cols-2 sm:gap-6">
+        <div className="grid shrink-0 gap-4 sm:gap-6 locked:grid-cols-2">
           <TimerCard
             engine={timer.engine}
             phase={phase}
@@ -639,7 +639,7 @@ export default function TimerApp() {
           </div>
         </div>
         <div
-          className={`grid gap-4 sm:gap-6 grid-cols-[minmax(0,1fr)] lg:grid-cols-2 locked-fill ${fadeCls}`}
+          className={`grid gap-4 sm:gap-6 grid-cols-[minmax(0,1fr)] locked:grid-cols-2 locked-fill ${fadeCls}`}
           aria-hidden={focused}
           inert={focused}
         >

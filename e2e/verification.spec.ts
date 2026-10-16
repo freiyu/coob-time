@@ -444,4 +444,37 @@ await test.step("R. hide timer while solving", async () => {
   await page.keyboard.press("Escape");
 });
 
+await test.step("S. best-stat popups", async () => {
+  let n = await rows();
+  while (n < 5) {
+    await page.getByRole("button", { name: "+ Add solve", exact: true }).click();
+    await page.getByRole("textbox", { name: "Time" }).fill(`${20 + n}.1${n % 10}`);
+    await page.getByRole("button", { name: "Add solve", exact: true }).click();
+    await page.waitForTimeout(150);
+    n = await rows();
+  }
+  const single = page.getByRole("button", { name: /Best single/ });
+  check("best single card is clickable", (await single.count()) === 1, await single.count());
+  await single.click();
+  await page.locator('[role="dialog"]').waitFor();
+  const dlg1 = await page.locator('[role="dialog"]').innerText();
+  check("single popup shows solve number", /Solve #\d+/.test(dlg1), dlg1.replace(/\n/g, " | ").slice(0, 120));
+  await page.keyboard.press("Escape");
+  await page.waitForSelector('[role="dialog"]', { state: "detached" });
+
+  const ao5 = page.getByRole("button", { name: /Best Ao5/ });
+  check("best Ao5 card is clickable", (await ao5.count()) === 1, await ao5.count());
+  await ao5.click();
+  await page.locator('[role="dialog"]').waitFor();
+  const dlg2 = await page.locator('[role="dialog"]').innerText();
+  check("Ao5 popup title", dlg2.includes("Best Ao5"), dlg2.replace(/\n/g, " | ").slice(0, 120));
+  check("Ao5 popup window range", /Solves #\d+.+#\d+/.test(dlg2), dlg2.replace(/\n/g, " | ").slice(0, 160));
+  const chips = await page.locator('[role="dialog"] span.tabular-nums').count();
+  check("Ao5 popup has 5 chips", chips === 5, chips);
+  await page.keyboard.press("Escape");
+  await page.waitForSelector('[role="dialog"]', { state: "detached" });
+
+  check("Ao12 not clickable at 5 solves", (await page.getByRole("button", { name: /Best Ao12/ }).count()) === 0);
+});
+
 });

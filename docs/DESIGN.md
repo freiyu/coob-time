@@ -101,6 +101,7 @@ Rules:
 - **Running focus mode**: while running every other element fades out (300ms, opacity only) and the timer card animates to the center of the viewport (translate transition, no layout shift). On stop it reverses. All of it honors `prefers-reduced-motion`.
 - Digits use **tabular figures** (`tabular-nums`) so the width never changes while counting. No layout shift between states.
 - Weight 600 to 700, one font family, very large (use `clamp()` so it scales from a small phone to a wide monitor), never thin.
+- **Best-stat popups**: the Best single, Best Ao5 and Best Ao12 cards are buttons (pointer + focus ring); clicking opens a popup with the solve or the averaging window behind the value. Cards without a value are not clickable.
 - Update the display smoothly, but never let the display rate affect the measured time.
 - Start and stop are keyboard-only (Space), per the owner's decision overriding PRD FR-T04 touch controls: the timer is not a clickable control, and clicks/taps on it do nothing.
 - Announce state changes ("Ready", "Saved") to assistive technology, never every tick.

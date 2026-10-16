@@ -45,14 +45,24 @@ export function aoN(solves: SolveLike[], n: number): number | null {
   return averageOfWindow(solves.slice(-n));
 }
 
-export function bestAoN(solves: SolveLike[], n: number): number | null {
+export function bestAoNEnd(solves: SolveLike[], n: number): number | null {
   if (solves.length < n) return null;
-  let best: number | null = null;
+  let bestEnd: number | null = null;
+  let bestValue: number | null = null;
   for (let end = n; end <= solves.length; end++) {
     const value = averageOfWindow(solves.slice(end - n, end));
-    if (value !== null && (best === null || value < best)) best = value;
+    if (value !== null && (bestValue === null || value < bestValue)) {
+      bestValue = value;
+      bestEnd = end;
+    }
   }
-  return best;
+  return bestEnd;
+}
+
+export function bestAoN(solves: SolveLike[], n: number): number | null {
+  const end = bestAoNEnd(solves, n);
+  if (end === null) return null;
+  return averageOfWindow(solves.slice(end - n, end));
 }
 
 // Parse a user-typed time ("12.34", "1:05.12", "0.5") to milliseconds.

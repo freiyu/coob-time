@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Award } from "lucide-react";
+import Dialog from "@/components/dialog";
 import type { SolveRecord } from "@/lib/storage/types";
 import {
   aoN,
   bestAoN,
+  bestAoNEnd,
   bestSingle,
   effectiveMs,
   formatMs,
@@ -20,11 +22,12 @@ interface StatCardProps {
   sub?: string;
   pb?: boolean;
   danger?: boolean;
+  onOpen?: () => void;
 }
 
-function StatCard({ label, value, sub, pb, danger }: StatCardProps) {
-  return (
-    <div className="rounded-[14px] border border-border bg-card p-4">
+function StatCard({ label, value, sub, pb, danger, onOpen }: StatCardProps) {
+  const inner = (
+    <>
       <p className="text-sm font-medium text-muted-foreground">{label}</p>
       <p
         className={`mt-1.5 text-xl font-semibold tabular-nums sm:text-2xl ${
@@ -40,7 +43,19 @@ function StatCard({ label, value, sub, pb, danger }: StatCardProps) {
         </span>
       )}
       {sub && <p className="mt-1 text-sm text-muted-foreground">{sub}</p>}
-    </div>
+    </>
+  );
+  if (!onOpen) {
+    return <div className="rounded-[14px] border border-border bg-card p-4">{inner}</div>;
+  }
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className="w-full cursor-pointer rounded-[14px] border border-border bg-card p-4 text-left transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      {inner}
+    </button>
   );
 }
 
@@ -182,6 +197,11 @@ function TrendChart({ solves }: { solves: SolveRecord[] }) {
 
 export default function Statistics({ solves }: StatisticsProps) {
   const [tab, setTab] = useState<"stats" | "trend">("stats");
+  const [popup, setPopup] = useState<
+    | { kind: "single"; solve: SolveRecord }
+    | { kind: "ao"; n: number; end: number; value: number }
+    | null
+  >(null);
   const count = solves.length;
   const best = bestSingle(solves);
   const avg = mean(solves);
@@ -189,11 +209,22 @@ export default function Statistics({ solves }: StatisticsProps) {
   const currentAo12 = aoN(solves, 12);
   const topAo5 = bestAoN(solves, 5);
   const topAo12 = bestAoN(solves, 12);
+  const bestSolve =
+    best === null ? null : (solves.find((s) => effectiveMs(s) === best) ?? null);
+  const topAo5End = topAo5 === null ? null : bestAoNEnd(solves, 5);
+  const topAo12End = topAo12 === null ? null : bestAoNEnd(solves, 12);
 
   const cards: StatCardProps[] = [
     { label: "Solves", value: String(count), sub: "in this session" },
     best !== null
-      ? { label: "Best single", value: formatMs(best), pb: count > 1 }
+      ? {
+          label: "Best single",
+          value: formatMs(best),
+          pb: count > 1,
+          ...(bestSolve
+            ? { onOpen: () => setPopup({ kind: "single", solve: bestSolve }) }
+            : {}),
+        }
       : count > 0
         ? { label: "Best single", value: "DNF", sub: "No valid solves", danger: true }
         : { label: "Best single", ...notEnough() },
@@ -212,13 +243,23 @@ export default function Statistics({ solves }: StatisticsProps) {
       : count >= 12
         ? { label: "Ao12", value: "DNF", danger: true }
         : { label: "Ao12", ...notEnough() },
-    topAo5 !== null
-      ? { label: "Best Ao5", value: formatMs(topAo5) }
+    topAo5 !== null && topAo5End !== null
+      ? {
+          label: "Best Ao5",
+          value: formatMs(topAo5),
+          onOpen: () =>
+            setPopup({ kind: "ao", n: 5, end: topAo5End, value: topAo5 }),
+        }
       : count >= 5
         ? { label: "Best Ao5", value: "DNF", danger: true }
         : { label: "Best Ao5", ...notEnough() },
-    topAo12 !== null
-      ? { label: "Best Ao12", value: formatMs(topAo12) }
+    topAo12 !== null && topAo12End !== null
+      ? {
+          label: "Best Ao12",
+          value: formatMs(topAo12),
+          onOpen: () =>
+            setPopup({ kind: "ao", n: 12, end: topAo12End, value: topAo12 }),
+        }
       : count >= 12
         ? { label: "Best Ao12", value: "DNF", danger: true }
         : { label: "Best Ao12", ...notEnough() },
@@ -285,6 +326,54 @@ export default function Statistics({ solves }: StatisticsProps) {
           <TrendChart solves={solves} />
         </div>
       )}
+      {popup?.kind === "single" && (
+        <Dialog title="Best single" onClose={() => setPopup(null)}>
+          <div className="p-4">
+            <p className="text-2xl font-semibold tabular-nums">
+              {formatMs(effectiveMs(popup.solve) ?? popup.solve.rawTimeMs)}
+            </p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Solve #{solves.indexOf(popup.solve) + 1} &middot;{" "}
+              {new Date(popup.solve.createdAt).toLocaleString()}
+            </p>
+            {popup.solve.penalty === "plus2" && (
+              <p className="mt-1 text-sm text-muted-foreground">
+                +2 penalty &middot; raw {formatMs(popup.solve.rawTimeMs)}
+              </p>
+            )}
+          </div>
+        </Dialog>
+      )}
+      {popup?.kind === "ao" &&
+        (() => {
+          const start = popup.end - popup.n;
+          const window = solves.slice(start, popup.end);
+          return (
+            <Dialog title={`Best Ao${popup.n}`} onClose={() => setPopup(null)}>
+              <div className="p-4">
+                <p className="text-2xl font-semibold tabular-nums">
+                  {formatMs(popup.value)}
+                </p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Solves #{start + 1}&ndash;#{popup.end}
+                </p>
+                <div className="mt-3 grid grid-cols-6 gap-2">
+                  {window.map((solve) => {
+                    const value = effectiveMs(solve);
+                    return (
+                      <span
+                        key={solve.id}
+                        className="shrink-0 rounded-lg border border-border px-2 py-1 text-sm tabular-nums text-muted-foreground"
+                      >
+                        {value === null ? "DNF" : formatMs(value)}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            </Dialog>
+          );
+        })()}
     </section>
   );
 }

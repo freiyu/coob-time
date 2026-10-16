@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   aoN,
   bestAoN,
+  bestAoNEnd,
   bestSingle,
   effectiveMs,
   formatMs,
@@ -112,6 +113,27 @@ describe("bestAoN", () => {
     const allDnf = [solve(1, "dnf"), solve(2, "dnf"), solve(3, "dnf"), solve(4, "dnf"), solve(5, "dnf")];
     expect(bestAoN(allDnf, 5)).toBeNull();
     expect(bestAoN([solve(1000)], 5)).toBeNull();
+  });
+});
+
+describe("bestAoNEnd", () => {
+  it("returns the end index of the first best window (ties keep the earliest)", () => {
+    // end5 avg 32000; first window averaging 9000 ends at 9; end10 ties and must not replace it
+    const laterWins = [
+      solve(30000), solve(31000), solve(32000), solve(33000), solve(34000),
+      solve(9000), solve(9000), solve(9000), solve(9000), solve(9000),
+    ];
+    expect(bestAoNEnd(laterWins, 5)).toBe(9);
+    const ties = [solve(9000), solve(9000), solve(9000), solve(9000), solve(9000), solve(9000)];
+    expect(bestAoNEnd(ties, 5)).toBe(5);
+  });
+
+  it("returns null for insufficient or all-DNF data", () => {
+    expect(bestAoNEnd([solve(1000)], 5)).toBeNull();
+    const allDnf = [
+      solve(1, "dnf"), solve(2, "dnf"), solve(3, "dnf"), solve(4, "dnf"), solve(5, "dnf"),
+    ];
+    expect(bestAoNEnd(allDnf, 5)).toBeNull();
   });
 });
 

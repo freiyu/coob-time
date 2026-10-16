@@ -29,6 +29,10 @@ Only the human supplies scores, satisfaction, bug notes, and the decision. Nobod
 
 ## Entries
 
+### Phases 1–5 — retroactive confirmation — 2026-10-15
+- Human confirmed on 2026-10-15: "untuk phase 6 harus di revise dulu, sisanya approve dari phase 1 sampe 5" — Phases 1–5 approved.
+- Phase 1 retroactively approved; tag `phase-1-approved` created at b777daa (the phase-1 "prd" commit). Phases 2–5 already tagged (phase-2-approved @22a9cb2, phase-3 @d4b5e64, phase-4 @40973df, phase-5 @6995b86).
+
 ### Phase 2 — Prototype — 2026-10-13
 - Agent summary: Visual prototype with sample data only — timer, scramble panel, puzzle selector, solve history, statistics, menu; no functional claims for timer/scramble/persistence. Reviews run before fixes; lint/typecheck/build re-run after fixes (all exit 0). `npm run test` missing script is expected (no test runner until later phases).
 - Commands / tests and observed results: `npm run lint` exit 0; `npm run typecheck` exit 0; `npm run build` exit 0 (static routes `/` and `/_not-found`); `npm run test` = missing script (expected). Tester run independently. Reviews NOT re-run after anti-slop fixes (mechanical, from reviewers' own recommendations).
@@ -87,6 +91,6 @@ Only the human supplies scores, satisfaction, bug notes, and the decision. Nobod
 - Commands / tests and observed results: Verified at 951e857 — lint/typecheck/vitest 61/61/build/e2e 3/3 all pass; browser one-offs observed (migration v1→v2, inspection flow, toggles, labels). Docs synced at 5f5bb44.
 - Scores (applicable categories): Timer accuracy and controls 5; Statistics and penalties 4; Local persistence 4; Backup import/export 3 (Satisfied: yes, explicit); Solve history and sessions 5; Accessibility and keyboard behavior 5; Scramble correctness by puzzle 5; Visual design and clarity 4. Tests and deployment readiness: (left blank — human deferred); Mobile/responsive behavior: (left blank — human deferred).
 - Satisfied / Not satisfied: Backup: satisfied (explicit). Overall satisfaction not stated beyond scores.
-- Bug notes and requested revisions: (none supplied by the human).
+- Bug notes and requested revisions: (not yet specified — agent to ask human what to revise).
 - Prompt used: PRD Section 14 Phase 6 prompt
-- Human decision: pending — explicit Approve / Revise / Reject not yet given (scores only); agent to ask. Quote (2026-10-15): "timer accuracy and controls saya kasih 5. statistics and penalties saya kasih 4, local persistence saya kasih 4, backup saya kasih 3 tapi satisfied ya. solve history and sessions 5, accessibility and keyboard behavior 5, scramble correctness 5, visual design and clarity 4, tests and deployment jangan diisi dulu, dan mobile responsive behavior jangan diisi dulu"
+- Human decision: Revise — 2026-10-15, quote: "untuk phase 6 harus di revise dulu, sisanya approve dari phase 1 sampe 5". Status: NOT approved, no tag. Earlier scores message (2026-10-15): "timer accuracy and controls saya kasih 5. statistics and penalties saya kasih 4, local persistence saya kasih 4, backup saya kasih 3 tapi satisfied ya. solve history and sessions 5, accessibility and keyboard behavior 5, scramble correctness 5, visual design and clarity 4, tests and deployment jangan diisi dulu, dan mobile responsive behavior jangan diisi dulu"

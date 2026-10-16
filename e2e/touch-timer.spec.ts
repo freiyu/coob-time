@@ -15,6 +15,11 @@ test("touch timer: hold starts, tap stops, swipe and mouse click do not", async 
   const digits = page.locator('section[aria-label="Timer"] .tabular-nums').first();
   const rows = () => page.locator("tbody tr").count();
   const n0 = await rows();
+  const timerBox = async () => {
+    const b = await card.boundingBox();
+    if (b === null) throw new Error("timer card has no bounding box");
+    return b;
+  };
 
   // Press-and-hold ≥300ms, lift → solve starts (digits keep advancing).
   await card.dispatchEvent("pointerdown", {
@@ -35,7 +40,7 @@ test("touch timer: hold starts, tap stops, swipe and mouse click do not", async 
   expect(d1).not.toBe(d2);
 
   // Tap while running stops and saves the solve.
-  let box = await card.boundingBox();
+  let box = await timerBox();
   await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2);
   await expect.poll(rows, { timeout: 5000 }).toBe(n0 + 1);
   const s1 = await digits.innerText();
@@ -43,7 +48,7 @@ test("touch timer: hold starts, tap stops, swipe and mouse click do not", async 
   expect(await digits.innerText()).toBe(s1);
 
   // A swipe starting on the timer must not start a solve (scroll-safe).
-  box = await card.boundingBox();
+  box = await timerBox();
   await card.dispatchEvent("pointerdown", {
     pointerType: "touch",
     pointerId: 2,
@@ -70,7 +75,7 @@ test("touch timer: hold starts, tap stops, swipe and mouse click do not", async 
   expect(await digits.innerText()).toBe(sw);
 
   // Mouse clicks stay inert (desktop keyboard-only decision preserved).
-  box = await card.boundingBox();
+  box = await timerBox();
   await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
   await page.waitForTimeout(150);
   expect(await rows()).toBe(n0 + 1);

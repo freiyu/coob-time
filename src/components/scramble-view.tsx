@@ -56,6 +56,10 @@ export default function ScrambleView({
     setAttempt((value) => value + 1);
   };
 
+  // In the compact thumbnail there is no room for failure UI — the scramble
+  // text next to it stays the authoritative fallback.
+  if (failed && compact) return null;
+
   return (
     <>
       <div

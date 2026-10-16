@@ -110,9 +110,11 @@ Rules:
 - A generation failure shows a clear error with a retry action. It never shows placeholder or fake notation.
 
 ## Layout (PRD 6.2)
-- Desktop: top bar (name, puzzle selector, session selector, theme and settings), a large timer, the scramble panel,
-  then statistics and history in tabs or two columns.
-- Mobile: timer near the center, puzzle selector reachable without a cramped bar, history and statistics in tabs.
+- Desktop, roomy windows (>=1024x640): locked fullscreen shell — top bar, large timer and scramble side by side,
+  statistics and history side by side; only inner panels scroll, the page never scrolls.
+- Smaller windows and phones (below 1024x640): the page scrolls. Sticky top bar; scramble text first with a small
+  scramble preview in the bottom-right corner (tap opens the wide popup); timer below as the visual highlight;
+  solve history capped at 45vh with its own scroll; statistics with natural height.
 - Every interactive target is comfortable to tap.
 
 ## Statistics and history

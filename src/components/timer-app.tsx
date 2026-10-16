@@ -524,6 +524,17 @@ export default function TimerApp() {
   const pbMs = bestSingle(solves);
 
   // Running focus mode: everything except the timer fades out (300ms).
+  // Focus mode must not lose the running timer to page scroll on
+  // small/scrollable viewports (the shell is only locked on roomy desktops).
+  useEffect(() => {
+    if (phase !== "running") return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [phase]);
+
   const focused = phase === "running";
   const fadeCls = `transition-opacity duration-300 ease-out motion-reduce:transition-none ${
     focused ? "pointer-events-none opacity-0" : "opacity-100"
@@ -532,7 +543,7 @@ export default function TimerApp() {
   return (
     <div className="flex flex-col app-shell">
       <div
-        className={`sticky top-0 z-20 shrink-0 bg-background lg:relative ${fadeCls}`}
+        className={`sticky top-0 z-20 shrink-0 bg-background ${fadeCls}`}
         aria-hidden={focused}
         inert={focused}
       >
@@ -612,7 +623,7 @@ export default function TimerApp() {
               if (pendingSolve) handleSetPenalty(pendingSolve.id, penalty);
             }}
           />
-          <div className={`order-first lg:order-none ${fadeCls}`} aria-hidden={focused} inert={focused}>
+          <div className={`unlocked:order-first ${fadeCls}`} aria-hidden={focused} inert={focused}>
             <ScramblePanel
               puzzleId={puzzleId}
               puzzleLabel={puzzleLabel(puzzleId)}

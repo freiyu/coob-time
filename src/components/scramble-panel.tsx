@@ -97,19 +97,24 @@ export default function ScramblePanel({
         </div>
       </header>
       {scramble !== "" && !longScramble && (
-        <div className="mt-4 flex items-end gap-3">
-          <p className="min-w-0 flex-1 font-mono text-base leading-relaxed break-words whitespace-pre-wrap text-foreground sm:text-lg">
-            {scramble}
-          </p>
-          <button
-            type="button"
-            onClick={() => setPopupOpen(true)}
-            aria-label="Show scramble"
-            className="shrink-0 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:hidden"
-          >
-            <ScrambleView puzzleId={puzzleId} scramble={scramble} compact />
-          </button>
-        </div>
+        <>
+          <div className="mt-4 flex items-end gap-3">
+            <p className="min-w-0 flex-1 font-mono text-base leading-relaxed break-words whitespace-pre-wrap text-foreground sm:text-lg">
+              {scramble}
+            </p>
+            <button
+              type="button"
+              onClick={() => setPopupOpen(true)}
+              aria-label="Show scramble"
+              className="shrink-0 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring locked:hidden"
+            >
+              <ScrambleView puzzleId={puzzleId} scramble={scramble} compact />
+            </button>
+          </div>
+          <div className="hidden locked:block">
+            <ScrambleView puzzleId={puzzleId} scramble={scramble} />
+          </div>
+        </>
       )}
       {status === "error" && (
         <p role="alert" className="mt-4 text-sm text-danger-foreground">
@@ -130,11 +135,6 @@ export default function ScramblePanel({
           <p className="mt-1 text-center text-sm text-muted-foreground">
             Click to see scramble
           </p>
-        </div>
-      )}
-      {scramble !== "" && !longScramble && (
-        <div className="mt-4 hidden lg:block">
-          <ScrambleView puzzleId={puzzleId} scramble={scramble} />
         </div>
       )}
       {copyState === "failed" && (

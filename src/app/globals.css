@@ -1,6 +1,10 @@
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
+/* Locked fullscreen shell = roomy desktop (>=1024x640); `unlocked` is
+   everything else, where the page scrolls and the compact design applies. */
+@custom-variant locked (@media (min-width: 1024px) and (min-height: 640px));
+@custom-variant unlocked (@media not all and (min-width: 1024px) and (min-height: 640px));
 
 :root {
   --background: #f6f9f8;

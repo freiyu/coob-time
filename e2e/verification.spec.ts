@@ -389,10 +389,9 @@ await test.step("Q. generator failure visible and recoverable", async () => {
   await page.route("**/cubing/**", (route) => route.abort());
   await page.reload();
   const surfaced = await page.waitForFunction(() => {
-    const a = document.querySelector('section[aria-label="Scramble"] [role="alert"]');
-    const st = document.querySelector('section[aria-label="Scramble"] [role="status"]');
-    const retry = [...document.querySelectorAll('section[aria-label="Scramble"] button')].some((b) => /try again/i.test(b.textContent || ""));
-    return !!(a || st || retry);
+    const alert = document.querySelector('section[aria-label="Scramble"] p[role="alert"]');
+    const retry = [...document.querySelectorAll('section[aria-label="Scramble"] button')].some((b) => /^Try again$/i.test((b.textContent || "").trim()));
+    return !!(alert && /scramble generation failed/i.test(alert.textContent || "")) || retry;
   }, undefined, { timeout: 20000 }).then(() => true).catch(() => false);
   check("generator failure surfaced (alert/status/retry)", surfaced);
   await page.unroute("**/cubing/**");

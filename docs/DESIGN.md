@@ -87,7 +87,7 @@ at 4.8:1 or better on the page background and card in both themes.
 
 | State | Digits | Label text | Color cue |
 |---|---|---|---|
-| Idle | `0.00` in foreground | "Hold Space to start" (keyboard only; mouse/tap does nothing) | none |
+| Idle | `0.00` in foreground | "Hold Space to start" (keyboard); on touch-primary devices the copy drops Space ("Hold to start" / "Tap to start") — touch/pen press-and-hold on the timer card mirrors Space (lift = start), a swipe >10px cancels; mouse clicks do nothing | none |
 | Holding (hold-to-ready, not ready yet) | danger | "Hold…" | danger text color on the digits and label, thin danger ring on the card |
 | Ready (release to start) | brand | "Ready" | brand text color on the digits and label, thin brand ring on the card |
 | Running | foreground | "Running" (sr-only while focused) | none, keep the screen calm |
@@ -103,7 +103,7 @@ Rules:
 - Weight 600 to 700, one font family, very large (use `clamp()` so it scales from a small phone to a wide monitor), never thin.
 - **Stat popups**: the Best single, Ao5, Ao12, Best Ao5 and Best Ao12 cards are buttons (pointer + focus ring) — clicking opens a popup with the solve or the averaging window behind the value. The solve popup shows time, solve #, date, +2 note and the scramble (text + scramble view). Each window chip is itself a button that opens that solve's popup. Cards without a value are not clickable.
 - Update the display smoothly, but never let the display rate affect the measured time.
-- Start and stop are keyboard-only (Space), per the owner's decision overriding PRD FR-T04 touch controls: the timer is not a clickable control, and clicks/taps on it do nothing.
+- Start and stop: Space on keyboard; on touch-primary devices (`pointer: coarse`) press-and-hold the timer card mirrors Space exactly (inspection first, hold-to-ready, canStart gate) — FR-T04 reinstated for touch 2026-10-16, replacing the earlier keyboard-only override. Swipes >10px on the card cancel the hold so scrolling never starts a solve. Mouse clicks still do nothing — the timer is not a mouse-clickable control.
 - Announce state changes ("Ready", "Saved") to assistive technology, never every tick.
 
 ## Scramble panel

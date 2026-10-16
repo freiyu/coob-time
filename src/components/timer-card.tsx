@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 import type { Penalty, SolveRecord } from "@/lib/storage/types";
 import { effectiveMs, formatMs } from "@/lib/statistics";
 import type {
@@ -20,7 +27,24 @@ interface TimerCardProps {
   inspectionMode: InspectionMode;
   hideTimer: boolean;
   saveState: "saving" | "saved" | "failed" | null;
+  onPress: () => void;
+  onRelease: () => void;
   onSetPenalty: (penalty: Penalty) => void;
+}
+
+const subscribeTouchPrimary = (onChange: () => void) => {
+  const query = window.matchMedia("(pointer: coarse)");
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+};
+const readTouchPrimary = () => window.matchMedia("(pointer: coarse)").matches;
+
+function useTouchPrimary() {
+  return useSyncExternalStore(
+    subscribeTouchPrimary,
+    readTouchPrimary,
+    () => false,
+  );
 }
 
 const STATE_LABEL: Record<
@@ -45,8 +69,11 @@ export default function TimerCard({
   inspectionMode,
   hideTimer,
   saveState,
+  onPress,
+  onRelease,
   onSetPenalty,
 }: TimerCardProps) {
+  const touchPrimary = useTouchPrimary();
   const [elapsed, setElapsed] = useState(0);
   const [insp, setInsp] = useState(0);
   const focused = phase === "running";
@@ -66,6 +93,60 @@ export default function TimerCard({
       dy: window.innerHeight / 2 - (rect.top + rect.height / 2),
     });
   }, [focused]);
+
+  // Touch/pen on the timer card mirrors Space (FR-T04): press-and-hold
+  // arms, lifting starts; tapping while running stops. A swipe >10px
+  // cancels so scrolling the page never starts a solve. Mouse clicks
+  // stay inert (owner's desktop decision).
+  const pointerRef = useRef<{
+    id: number;
+    x: number;
+    y: number;
+    cancelled: boolean;
+  } | null>(null);
+
+  const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === "mouse") return;
+    if ((event.target as HTMLElement).closest("button")) return;
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {
+      // Synthetic pointer events (e2e) have no active pointer to capture.
+    }
+    pointerRef.current = {
+      id: event.pointerId,
+      x: event.clientX,
+      y: event.clientY,
+      cancelled: false,
+    };
+    onPress();
+  };
+
+  const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const state = pointerRef.current;
+    if (!state || state.id !== event.pointerId || state.cancelled) return;
+    if (Math.hypot(event.clientX - state.x, event.clientY - state.y) > 10) {
+      state.cancelled = true;
+      engine.cancel();
+    }
+  };
+
+  const handlePointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const state = pointerRef.current;
+    if (!state || state.id !== event.pointerId) return;
+    pointerRef.current = null;
+    if (state.cancelled) {
+      engine.cancel();
+      return;
+    }
+    onRelease();
+  };
+
+  const handlePointerCancel = () => {
+    if (pointerRef.current === null) return;
+    pointerRef.current = null;
+    engine.cancel();
+  };
 
   useEffect(() => {
     const live =
@@ -111,11 +192,19 @@ export default function TimerCard({
   const idleCopy =
     inspectionMode !== "off"
       ? holdMode
-        ? "Hold Space to inspect"
-        : "Press Space to inspect"
+        ? touchPrimary
+          ? "Hold to inspect"
+          : "Hold Space to inspect"
+        : touchPrimary
+          ? "Tap to inspect"
+          : "Press Space to inspect"
       : holdMode
-        ? "Hold Space to start"
-        : "Press Space to start";
+        ? touchPrimary
+          ? "Hold to start"
+          : "Hold Space to start"
+        : touchPrimary
+          ? "Tap to start"
+          : "Press Space to start";
   // Inspection stays count-up; WCA turns orange at 15s and red at 17s,
   // the 15s mode only warns (no penalties). WCA A4d: 15.00 itself is +2.
   const inspectionDanger = inspectionMode === "wca" && insp >= 17_000;
@@ -144,7 +233,9 @@ export default function TimerCard({
         : (inspectionMode === "15s" && insp >= 15_000
             ? "15s up — start whenever"
             : (cueTone ??
-              `Inspection — ${holdMode ? "hold" : "press"} Space`))
+              (touchPrimary
+                ? `Inspection — ${holdMode ? "hold" : "tap"} the timer`
+                : `Inspection — ${holdMode ? "hold" : "press"} Space`)))
     : phase === "idle"
       ? scrambleReady
         ? idleCopy
@@ -204,7 +295,11 @@ export default function TimerCard({
       style={flip ? { transform: `translate(${flip.dx}px, ${flip.dy}px)` } : undefined}
     >
       <div
-        className={`flex h-full min-h-[38vh] flex-col items-center justify-center gap-4 rounded-[14px] border border-border bg-card px-4 py-8 sm:py-10 ${ringCls}`}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerCancel}
+        className={`flex h-full min-h-[38vh] select-none flex-col items-center justify-center gap-4 rounded-[14px] border border-border bg-card px-4 py-8 sm:py-10 ${ringCls}`}
       >
         <div className="flex w-full flex-col items-center justify-center gap-4">
           <span

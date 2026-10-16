@@ -46,6 +46,31 @@ export function useTimer(options: UseTimerOptions) {
     }
   }, [engine]);
 
+  // One Space-press action shared by the keyboard and the touch gesture
+  // on the timer card (FR-T04): inspection first, then arm (hold mode)
+  // or start/stop (press mode).
+  const press = useCallback(() => {
+    // First press from idle/stopped enters inspection (when enabled);
+    // the next hold/press is the actual solve start. Gated by canStart
+    // so a broken scramble can't park the user in inspection.
+    if (
+      (engine.phase === "idle" || engine.phase === "stopped") &&
+      canStartRef.current() &&
+      engine.startInspection()
+    ) {
+      return;
+    }
+    if (engine.holdToReady && engine.phase !== "running") {
+      if (canStartRef.current()) engine.arm();
+    } else {
+      toggle();
+    }
+  }, [engine, toggle]);
+
+  const release = useCallback(() => {
+    if (engine.holdToReady) engine.release();
+  }, [engine]);
+
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.metaKey || event.ctrlKey || event.altKey) return;
@@ -58,21 +83,7 @@ export function useTimer(options: UseTimerOptions) {
         // every Space (including repeats) before the repeat guard.
         event.preventDefault();
         if (event.repeat) return;
-        // First Space from idle/stopped enters inspection (when enabled);
-        // the next hold/press is the actual solve start. Gated by canStart
-        // so a broken scramble can't park the user in inspection.
-        if (
-          (engine.phase === "idle" || engine.phase === "stopped") &&
-          canStartRef.current() &&
-          engine.startInspection()
-        ) {
-          return;
-        }
-        if (engine.holdToReady && engine.phase !== "running") {
-          if (canStartRef.current()) engine.arm();
-        } else {
-          toggle();
-        }
+        press();
         return;
       }
 
@@ -99,7 +110,7 @@ export function useTimer(options: UseTimerOptions) {
       if (isTypingTarget(event.target)) return;
       // A dialog opened mid-hold must not let release() start a solve.
       if (isDialogOpen()) return;
-      if (engine.holdToReady) engine.release();
+      release();
     };
 
     window.addEventListener("keydown", onKeyDown);
@@ -108,7 +119,7 @@ export function useTimer(options: UseTimerOptions) {
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
     };
-  }, [engine, toggle]);
+  }, [engine, toggle, press, release]);
 
-  return { engine, phase, toggle };
+  return { engine, phase, toggle, press, release };
 }

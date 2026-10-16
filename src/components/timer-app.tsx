@@ -620,6 +620,8 @@ export default function TimerApp() {
             hideTimer={settings?.hideTimer === true}
             saveState={saveState}
             ao5Dnf={solves.length >= 5 && ao5 === null}
+            onPress={timer.press}
+            onRelease={timer.release}
             onSetPenalty={(penalty) => {
               if (pendingSolve) handleSetPenalty(pendingSolve.id, penalty);
             }}

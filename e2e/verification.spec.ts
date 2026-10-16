@@ -15,8 +15,6 @@ const check = (n: string, c: unknown, extra: unknown = "") => {
 const timerText = () => page.locator('section[aria-label="Timer"]').innerText();
 const rows = () => page.locator("tbody tr").count();
 page.on("pageerror", (e) => check("no page error", false, e.message));
-await page.goto("http://localhost:3000/");
-await page.waitForTimeout(2500);
 const waitReady = async () => {
   await page.waitForFunction(() => {
     const p = document.querySelector('section[aria-label="Scramble"] p.font-mono');
@@ -48,14 +46,16 @@ const switchPuzzle = async (label: string) => {
   curPuzzle = label;
   await waitReady();
 };
+await page.goto("/");
+await page.locator('section[aria-label="Scramble"]').waitFor();
+await waitReady();
+
 console.log("=== A. 10 puzzle scrambles (browser) ===");
 const labels = ["2×2×2","3×3×3","4×4×4","5×5×5","6×6×6","7×7×7","Megaminx","Square-1","Pyraminx","Skewb"];
-const seen: Record<string, string | null> = {};
 for (const label of labels) {
   try {
     await switchPuzzle(label);
     const s = await getScramble();
-    seen[label] = s;
     check(`scramble ${label}`, !!s && s.replace(/\s/g, "").length >= 3, JSON.stringify((s || "").slice(0, 60)));
   } catch (e) { check(`scramble ${label}`, false, e instanceof Error ? e.message : String(e)); }
 }
@@ -65,7 +65,7 @@ console.log("=== B. copy + new scramble + N ===");
 {
   const t1 = await getScramble();
   await page.getByRole("button", { name: "Copy Scramble", exact: true }).click();
-  await page.waitForTimeout(300);
+  await page.getByRole("button", { name: "Copied", exact: true }).waitFor({ timeout: 5000 }).catch(() => {});
   const clip = await page.evaluate(() => navigator.clipboard.readText());
   check("clipboard equals scramble", clip.trim() === t1.trim(), JSON.stringify({ clip: clip.slice(0, 40), t1: t1.slice(0, 40) }));
   check("copy feedback label", (await page.getByRole("button", { name: /Copied|Copy Scramble/ }).innerText()).includes("Copied"));
@@ -130,7 +130,7 @@ console.log("=== D. DNF / +2 ===");
   check("DNF aria-pressed", (await group.getByRole("button", { name: "DNF", exact: true }).getAttribute("aria-pressed")) === "true");
   const rowText2 = await page.locator("tbody tr").first().innerText();
   check("DNF in history", rowText2.includes("DNF"), rowText2.replace(/\n/g, " | ").slice(0, 80));
-  check("stats not-enough copy visible", await page.getByText(/Not enough solves|—/).first().isVisible().catch(() => false));
+  check("stats not-enough copy visible", await page.getByText("Not enough solves").first().isVisible().catch(() => false));
   await group.getByRole("button", { name: "DNF", exact: true }).click();
   await page.waitForTimeout(250);
   check("row count stable through penalties", (await rows()) === n, await rows());
@@ -157,11 +157,21 @@ console.log("=== F. keyboard guards ===");
   await page.waitForTimeout(500);
   check("Space in input keeps dialog open", await page.locator('[role="dialog"]').isVisible());
   check("Space in input does not start timer", !(await timerText()).includes("Running"));
+  const readMono = () => page.evaluate(() => document.querySelector('section[aria-label="Scramble"] p.font-mono')?.textContent?.trim() ?? null);
+  const scrA = await readMono();
+  await page.keyboard.press("n");
+  await page.waitForTimeout(700);
+  const scrB = await readMono();
+  check("n inside input does not regenerate scramble", scrA !== null && scrB === scrA, JSON.stringify({ scrA: (scrA || "").slice(0, 30), scrB: (scrB || "").slice(0, 30) }));
   await page.keyboard.press("Escape");
   await page.waitForSelector('[role="dialog"]', { state: "detached" });
-  await page.keyboard.press("n"); await page.waitForTimeout(700);
-  const scr2 = await getScramble();
-  check("N in input area blocked (scramble unchanged after N-once)", scr2 !== scr || true, "N guard verified by unit tests; browser: no crash");
+  await page.keyboard.press("n");
+  await page.waitForFunction((old) => {
+    const el = document.querySelector('section[aria-label="Scramble"] p.font-mono');
+    return !!el && el.textContent.trim().length > 2 && el.textContent.trim() !== old;
+  }, (scrB || "").trim(), { timeout: 20000 }).catch(() => {});
+  const scr2 = await readMono();
+  check("n regenerates after dialog closed", scr2 !== scrB, JSON.stringify({ scrB: (scrB || "").slice(0, 30), scr2: (scr2 || "").slice(0, 30) }));
   check("no stray solve", (await rows()) === n, await rows());
 }
 
@@ -312,7 +322,9 @@ console.log("=== M. theme ===");
   await page.getByRole("button", { name: /^(Dark|Light|System)$/, exact: true }).click();
   await page.getByRole("menuitem", { name: "Dark", exact: true }).click();
   check("dark applied", await page.evaluate(() => document.documentElement.classList.contains("dark")));
-  await page.reload(); await page.waitForTimeout(1500);
+  await page.reload();
+  await page.locator("h1").waitFor();
+  await page.waitForFunction(() => document.documentElement.classList.contains("dark"), undefined, { timeout: 10000 }).catch(() => {});
   check("dark persists after reload", await page.evaluate(() => document.documentElement.classList.contains("dark")));
   await page.getByRole("button", { name: "Dark", exact: true }).click();
   await page.getByRole("menuitem", { name: "System", exact: true }).click();
@@ -332,5 +344,67 @@ console.log("=== N. responsive quick ===");
   const m2 = await page.evaluate(() => ({ sh: document.documentElement.scrollHeight, ch: document.documentElement.clientHeight }));
   check("desktop locked", m2.sh <= m2.ch + 1, JSON.stringify(m2));
 }
+
+await test.step("O. Space does not scroll (unlocked) + scroll-lock while running", async () => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.waitForTimeout(400);
+  const y0 = await page.evaluate(() => window.scrollY);
+  await page.keyboard.down("Space");
+  await page.waitForTimeout(400);
+  const y1 = await page.evaluate(() => window.scrollY);
+  await page.keyboard.up("Space");
+  await page.waitForTimeout(500);
+  const y2 = await page.evaluate(() => window.scrollY);
+  check("Space never scrolls the page (unlocked)", y0 === y1 && y1 === y2, JSON.stringify({ y0, y1, y2 }));
+  check("running label (unlocked)", (await timerText()).includes("Running"));
+  await page.mouse.wheel(0, 300);
+  await page.waitForTimeout(250);
+  const y3 = await page.evaluate(() => window.scrollY);
+  check("wheel scroll blocked while running (unlocked)", y3 === y2, JSON.stringify({ y2, y3 }));
+  await page.keyboard.press("Space");
+  await page.waitForTimeout(500);
+  if ((await timerText()).includes("Running")) { await page.keyboard.press("Space"); await page.waitForTimeout(500); }
+  check("body overflow restored after run", (await page.evaluate(() => document.body.style.overflow)) === "");
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.waitForTimeout(400);
+});
+
+await test.step("P. tablet viewport scrolls and stacks", async () => {
+  await page.setViewportSize({ width: 820, height: 1180 });
+  await page.waitForTimeout(500);
+  const m = await page.evaluate(() => ({
+    sh: document.documentElement.scrollHeight,
+    ch: document.documentElement.clientHeight,
+    sw: document.documentElement.scrollWidth,
+  }));
+  check("tablet scrolls", m.sh > m.ch + 20, JSON.stringify(m));
+  check("tablet no h-overflow", m.sw <= 821, m.sw);
+  const sb = await page.locator('section[aria-label="Scramble"]').boundingBox();
+  const tb = await page.locator('section[aria-label="Timer"]').boundingBox();
+  check("tablet stacked (scramble above timer)", !!sb && !!tb && sb.y < tb.y, JSON.stringify({ sb, tb }));
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.waitForTimeout(400);
+});
+
+await test.step("Q. generator failure visible and recoverable", async () => {
+  await page.route("**/cubing/**", (route) => route.abort());
+  await page.reload();
+  const surfaced = await page.waitForFunction(() => {
+    const a = document.querySelector('section[aria-label="Scramble"] [role="alert"]');
+    const st = document.querySelector('section[aria-label="Scramble"] [role="status"]');
+    const retry = [...document.querySelectorAll('section[aria-label="Scramble"] button')].some((b) => /try again/i.test(b.textContent || ""));
+    return !!(a || st || retry);
+  }, undefined, { timeout: 20000 }).then(() => true).catch(() => false);
+  check("generator failure surfaced (alert/status/retry)", surfaced);
+  await page.unroute("**/cubing/**");
+  await page.reload();
+  await page.locator('section[aria-label="Scramble"]').waitFor();
+  await waitReady();
+  const recovered = await page.evaluate(() => {
+    const p = document.querySelector('section[aria-label="Scramble"] p.font-mono');
+    return !!p && p.textContent.trim().length > 2;
+  });
+  check("scramble recovers after network restored", recovered);
+});
 
 });

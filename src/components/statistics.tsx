@@ -227,7 +227,7 @@ export default function Statistics({ solves }: StatisticsProps) {
   return (
     <section
       aria-label="Statistics"
-      className="flex min-h-0 flex-col rounded-[14px] border border-border bg-card lg:h-full"
+      className="flex min-w-0 flex-col rounded-[14px] border border-border bg-card"
     >
       <header
         role="tablist"
@@ -265,7 +265,7 @@ export default function Statistics({ solves }: StatisticsProps) {
         <div
           role="tabpanel"
           aria-label="Statistics"
-          className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6"
+          className="stat-scroll p-4 sm:p-6"
         >
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             {cards.map((card) => (
@@ -277,7 +277,7 @@ export default function Statistics({ solves }: StatisticsProps) {
         <div
           role="tabpanel"
           aria-label="Solve trend"
-          className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6"
+          className="stat-scroll p-4 sm:p-6"
         >
           <p className="text-sm text-muted-foreground">
             Solve time in seconds · DNFs not plotted

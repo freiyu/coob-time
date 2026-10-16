@@ -97,9 +97,19 @@ export default function ScramblePanel({
         </div>
       </header>
       {scramble !== "" && !longScramble && (
-        <p className="mt-4 font-mono text-base leading-relaxed break-words whitespace-pre-wrap text-foreground sm:text-lg">
-          {scramble}
-        </p>
+        <div className="mt-4 flex items-end gap-3">
+          <p className="min-w-0 flex-1 font-mono text-base leading-relaxed break-words whitespace-pre-wrap text-foreground sm:text-lg">
+            {scramble}
+          </p>
+          <button
+            type="button"
+            onClick={() => setPopupOpen(true)}
+            aria-label="Show scramble"
+            className="shrink-0 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:hidden"
+          >
+            <ScrambleView puzzleId={puzzleId} scramble={scramble} compact />
+          </button>
+        </div>
       )}
       {status === "error" && (
         <p role="alert" className="mt-4 text-sm text-danger-foreground">
@@ -123,7 +133,9 @@ export default function ScramblePanel({
         </div>
       )}
       {scramble !== "" && !longScramble && (
-        <ScrambleView puzzleId={puzzleId} scramble={scramble} />
+        <div className="mt-4 hidden lg:block">
+          <ScrambleView puzzleId={puzzleId} scramble={scramble} />
+        </div>
       )}
       {copyState === "failed" && (
         <p className="mt-2 text-sm text-danger-foreground">

@@ -126,7 +126,7 @@ export default function SolveHistory({
   return (
     <section
       aria-label="Solve history"
-      className="flex min-h-0 flex-col rounded-[14px] border border-border bg-card lg:h-full"
+      className="flex min-w-0 flex-col rounded-[14px] border border-border bg-card"
     >
       <header className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3 sm:px-6">
         <h2 className="text-sm font-semibold">Solve history</h2>
@@ -157,7 +157,7 @@ export default function SolveHistory({
           </p>
         </div>
       ) : (
-        <div className="min-h-0 flex-1 overflow-auto">
+        <div className="history-scroll relative">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border text-sm font-medium text-muted-foreground">

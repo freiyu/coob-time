@@ -136,3 +136,35 @@ body {
     animation-duration: 0.01ms !important;
   }
 }
+
+/* Responsive shell. The app locks into the non-scrolling fullscreen layout
+   only on roomy desktops (>=1024x640); smaller windows and phones flow
+   normally and the page scrolls. */
+.app-shell {
+  min-height: 100%;
+}
+.history-scroll {
+  min-width: 0;
+  max-height: 45vh;
+  overflow: auto;
+}
+@media (min-width: 1024px) and (min-height: 640px) {
+  .app-shell {
+    height: 100%;
+    overflow: hidden;
+  }
+  .locked-fill {
+    min-height: 0;
+    flex: 1;
+  }
+  .history-scroll {
+    min-height: 0;
+    max-height: none;
+    flex: 1;
+  }
+  .stat-scroll {
+    min-height: 0;
+    flex: 1;
+    overflow-y: auto;
+  }
+}

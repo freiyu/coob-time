@@ -28,7 +28,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
       suppressHydrationWarning
     >
-      <body className="flex h-full flex-col overflow-hidden">
+      <body className="flex flex-col app-shell">
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />
         {children}
       </body>

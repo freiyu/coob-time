@@ -9,9 +9,15 @@ import { EVENT_IDS } from "@/lib/scrambles/events";
 interface ScrambleViewProps {
   puzzleId: PuzzleId;
   scramble: string;
+  /** Small square thumbnail (mobile preview); click opens the wide popup. */
+  compact?: boolean;
 }
 
-export default function ScrambleView({ puzzleId, scramble }: ScrambleViewProps) {
+export default function ScrambleView({
+  puzzleId,
+  scramble,
+  compact = false,
+}: ScrambleViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [failed, setFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
@@ -55,7 +61,13 @@ export default function ScrambleView({ puzzleId, scramble }: ScrambleViewProps) 
       <div
         ref={containerRef}
         aria-hidden
-        className={failed ? "hidden" : "mt-4 h-44 w-full sm:h-52"}
+        className={
+          failed
+            ? "hidden"
+            : compact
+              ? "h-20 w-20 sm:h-24 sm:w-24"
+              : "mt-4 h-44 w-full sm:h-52"
+        }
       />
       <p
         role="status"
@@ -63,7 +75,7 @@ export default function ScrambleView({ puzzleId, scramble }: ScrambleViewProps) 
       >
         {failed ? "The scramble graphic didn't load. Use the scramble text above." : ""}
       </p>
-      {failed && (
+      {failed && !compact && (
         <button
           type="button"
           onClick={handleRetry}

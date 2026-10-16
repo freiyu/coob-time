@@ -530,8 +530,12 @@ export default function TimerApp() {
   }`;
 
   return (
-    <div className="flex h-full flex-col overflow-hidden">
-      <div className={`shrink-0 ${fadeCls}`} aria-hidden={focused} inert={focused}>
+    <div className="flex flex-col app-shell">
+      <div
+        className={`sticky top-0 z-20 shrink-0 bg-background lg:relative ${fadeCls}`}
+        aria-hidden={focused}
+        inert={focused}
+      >
         <TopBar
           puzzleId={puzzleId}
           onPuzzleChange={handlePuzzleChange}
@@ -592,7 +596,7 @@ export default function TimerApp() {
           </div>
         </div>
       )}
-      <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-4 overflow-hidden px-4 py-4 sm:gap-6 sm:px-6">
+      <main className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-4 sm:gap-6 sm:px-6 locked-fill">
         <div className="grid shrink-0 gap-4 lg:grid-cols-2 sm:gap-6">
           <TimerCard
             engine={timer.engine}
@@ -608,7 +612,7 @@ export default function TimerApp() {
               if (pendingSolve) handleSetPenalty(pendingSolve.id, penalty);
             }}
           />
-          <div className={fadeCls} aria-hidden={focused} inert={focused}>
+          <div className={`order-first lg:order-none ${fadeCls}`} aria-hidden={focused} inert={focused}>
             <ScramblePanel
               puzzleId={puzzleId}
               puzzleLabel={puzzleLabel(puzzleId)}
@@ -624,7 +628,7 @@ export default function TimerApp() {
           </div>
         </div>
         <div
-          className={`grid min-h-0 flex-1 grid-rows-2 gap-4 lg:grid-cols-2 lg:grid-rows-none sm:gap-6 ${fadeCls}`}
+          className={`grid gap-4 sm:gap-6 grid-cols-[minmax(0,1fr)] lg:grid-cols-2 locked-fill ${fadeCls}`}
           aria-hidden={focused}
           inert={focused}
         >

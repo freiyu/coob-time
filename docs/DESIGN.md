@@ -96,6 +96,8 @@ at 4.8:1 or better on the page background and card in both themes.
 | DNF | foreground, struck or labeled | "DNF" badge | danger badge |
 
 Rules:
+- **Hide timer setting**: while a solve is running the digits show the word "solve" instead of the elapsed time (blind-solve mode). Inspection, holding/ready and stopped states keep their normal display.
+- The inspection clock shows whole seconds only — no milliseconds.
 - **Running focus mode**: while running every other element fades out (300ms, opacity only) and the timer card animates to the center of the viewport (translate transition, no layout shift). On stop it reverses. All of it honors `prefers-reduced-motion`.
 - Digits use **tabular figures** (`tabular-nums`) so the width never changes while counting. No layout shift between states.
 - Weight 600 to 700, one font family, very large (use `clamp()` so it scales from a small phone to a wide monitor), never thin.

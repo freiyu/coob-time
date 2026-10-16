@@ -18,6 +18,7 @@ interface TimerCardProps {
   scrambleReady: boolean;
   holdMode: boolean;
   inspectionMode: InspectionMode;
+  hideTimer: boolean;
   saveState: "saving" | "saved" | "failed" | null;
   onSetPenalty: (penalty: Penalty) => void;
 }
@@ -42,6 +43,7 @@ export default function TimerCard({
   scrambleReady,
   holdMode,
   inspectionMode,
+  hideTimer,
   saveState,
   onSetPenalty,
 }: TimerCardProps) {
@@ -98,7 +100,10 @@ export default function TimerCard({
         : formatMs(effectiveMs(pendingSolve) ?? pendingSolve.rawTimeMs)
       : "—";
   } else if (showInspection) {
-    digits = formatMs(insp);
+    // Whole seconds only — a millisecond inspection clock is noise.
+    digits = String(Math.floor(insp / 1000));
+  } else if (phase === "running" && hideTimer) {
+    digits = "solve";
   } else {
     digits = formatMs(elapsed);
   }

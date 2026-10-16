@@ -43,6 +43,7 @@ const settingsSchema = z
     soundEnabled: z.boolean(),
     theme: z.enum(["dark", "light", "system"]),
     autoNextScramble: z.boolean(),
+    hideTimer: z.boolean().optional().default(false),
   })
   .transform(({ inspectionMode, inspectionEnabled, ...rest }) => ({
     ...rest,

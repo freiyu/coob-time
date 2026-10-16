@@ -617,6 +617,7 @@ export default function TimerApp() {
             scrambleReady={scrambleState.status === "ready"}
             holdMode={settings?.startMode !== "press"}
             inspectionMode={settings?.inspectionMode ?? "off"}
+            hideTimer={settings?.hideTimer === true}
             saveState={saveState}
             ao5Dnf={solves.length >= 5 && ao5 === null}
             onSetPenalty={(penalty) => {

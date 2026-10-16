@@ -29,6 +29,7 @@ export interface SettingsRecord {
   soundEnabled: boolean;
   theme: "dark" | "light" | "system";
   autoNextScramble: boolean;
+  hideTimer: boolean;
 }
 
 export interface SolveRepository {

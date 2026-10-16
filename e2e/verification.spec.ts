@@ -302,6 +302,8 @@ console.log("=== L. inspection WCA flow ===");
   await page.waitForTimeout(600);
   const t = await timerText();
   check("first Space enters inspection", t.includes("Inspection"), t.replace(/\n/g, " | ").slice(0, 80));
+  const inspDigits = (await page.locator('section[aria-label="Timer"] .tabular-nums').first().innerText()).trim();
+  check("inspection digits are whole seconds (no ms)", /^\d+$/.test(inspDigits), inspDigits);
   check("no solve yet from inspection", (await rows()) === n, await rows());
   await page.keyboard.down("Space"); await page.waitForTimeout(400); await page.keyboard.up("Space");
   await page.waitForTimeout(600);
@@ -403,6 +405,43 @@ await test.step("Q. generator failure visible and recoverable", async () => {
     return !!p && p.textContent.trim().length > 2;
   });
   check("scramble recovers after network restored", recovered);
+});
+
+await test.step("R. hide timer while solving", async () => {
+  const digits = () => page.locator('section[aria-label="Timer"] .tabular-nums').first().innerText();
+  await page.getByRole("button", { name: "Open data and settings" }).click();
+  await page.waitForSelector('[role="dialog"]');
+  const cb = page.getByRole("checkbox", { name: "Hide timer while solving" });
+  await cb.click();
+  await page.waitForFunction(
+    () => [...document.querySelectorAll('input[type="checkbox"]')].some((el) => (el as HTMLInputElement).checked && /hide timer/i.test(el.closest("label")?.textContent || "")),
+    undefined,
+    { timeout: 5000 },
+  );
+  await page.keyboard.press("Escape");
+  await page.waitForSelector('[role="dialog"]', { state: "detached" });
+  await page.keyboard.down("Space");
+  await page.waitForTimeout(400);
+  await page.keyboard.up("Space");
+  await page.waitForTimeout(500);
+  check("running label while hidden", (await timerText()).includes("Running"));
+  const shown = (await digits()).trim();
+  check("running digits show 'solve'", shown === "solve", shown);
+  await page.keyboard.press("Space");
+  await page.waitForTimeout(500);
+  if ((await timerText()).includes("Running")) { await page.keyboard.press("Space"); await page.waitForTimeout(500); }
+  const after = (await digits()).trim();
+  check("stopped shows the time again", /\d/.test(after), after);
+  await page.getByRole("button", { name: "Open data and settings" }).click();
+  await page.waitForSelector('[role="dialog"]');
+  const cb2 = page.getByRole("checkbox", { name: "Hide timer while solving" });
+  await cb2.click();
+  await page.waitForFunction(
+    () => ![...document.querySelectorAll('input[type="checkbox"]')].some((el) => (el as HTMLInputElement).checked && /hide timer/i.test(el.closest("label")?.textContent || "")),
+    undefined,
+    { timeout: 5000 },
+  );
+  await page.keyboard.press("Escape");
 });
 
 });

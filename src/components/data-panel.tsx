@@ -299,6 +299,25 @@ export default function DataPanel({
             ))}
           </fieldset>
 
+          <fieldset className="space-y-1">
+            <legend className="text-sm font-medium">Display</legend>
+            <label className="flex min-h-10 items-center gap-2 py-1.5 text-sm">
+              <input
+                type="checkbox"
+                checked={settings?.hideTimer === true}
+                disabled={!settings || !storageOk}
+                onChange={(event) =>
+                  updateSettings({ hideTimer: event.target.checked })
+                }
+                className="size-4 accent-primary"
+              />
+              Hide timer while solving
+            </label>
+            <p className="text-sm text-muted-foreground">
+              Shows &ldquo;solve&rdquo; instead of the running time.
+            </p>
+          </fieldset>
+
           <label className="block space-y-1.5">
             <span className="text-sm font-medium">Default puzzle</span>
             <select

@@ -14,6 +14,7 @@ export const DEFAULT_SETTINGS: SettingsRecord = {
   soundEnabled: false,
   theme: "system",
   autoNextScramble: true,
+  hideTimer: false,
 };
 
 interface CubetimeDB extends DBSchema {

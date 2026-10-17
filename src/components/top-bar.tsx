@@ -9,7 +9,6 @@ import {
   BUTTON_PRIMARY,
   BUTTON_SECONDARY,
 } from "@/components/data-panel";
-import { PUZZLES, type Puzzle, type PuzzleId } from "@/lib/puzzles";
 
 export type ThemeChoice = "dark" | "light" | "system";
 
@@ -20,8 +19,6 @@ interface SessionOption {
 }
 
 interface TopBarProps {
-  puzzleId: PuzzleId;
-  onPuzzleChange: (puzzleId: PuzzleId) => void;
   sessions: SessionOption[];
   sessionId: string;
   onSessionChange: (sessionId: string) => void;
@@ -44,8 +41,6 @@ const themeOptions: { value: ThemeChoice; label: string; icon: React.ReactNode }
 ];
 
 export default function TopBar({
-  puzzleId,
-  onPuzzleChange,
   sessions,
   sessionId,
   onSessionChange,
@@ -64,13 +59,6 @@ export default function TopBar({
 
   const activeSession = sessions.find((session) => session.id === sessionId);
   const canDeleteSession = sessions.length > 1;
-
-  const puzzleItems: MenuItem[] = PUZZLES.map((puzzle: Puzzle) => ({
-    label: puzzle.label,
-    value: puzzle.id,
-    disabled: selectionLocked && puzzle.id !== puzzleId,
-    onSelect: () => onPuzzleChange(puzzle.id),
-  }));
 
   const sessionItems: MenuItem[] = [
     ...sessions.map((session) => ({
@@ -118,19 +106,13 @@ export default function TopBar({
     <>
       <header className="border-b border-border">
       <div className="mx-auto flex w-full max-w-6xl items-center gap-3 px-4 py-3 sm:px-6">
-        <div className="flex flex-1 items-center gap-2">
-          <Box aria-hidden className="size-5 text-brand-strong" />
-          <h1 className="text-base font-semibold">CubeTime</h1>
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          <Box aria-hidden className="hidden size-5 text-brand-strong sm:block" />
+          <h1 className="sr-only text-base font-semibold sm:not-sr-only sm:truncate">
+            CubeTime
+          </h1>
         </div>
-        <div className="flex flex-wrap items-center justify-end gap-2">
-          <Menu
-            label={
-              PUZZLES.find((puzzle) => puzzle.id === puzzleId)?.label ?? puzzleId
-            }
-            items={puzzleItems}
-            activeValue={puzzleId}
-            ariaLabel="Select puzzle"
-          />
+        <div className="flex shrink-0 flex-nowrap items-center justify-end gap-1.5 sm:gap-2">
           <Menu
             label={activeSession?.name ?? "No session"}
             items={sessionItems}
@@ -138,7 +120,6 @@ export default function TopBar({
             ariaLabel="Select session"
           />
           <Menu
-            label={activeTheme?.label ?? "Theme"}
             items={themeItems}
             activeValue={theme}
             ariaLabel="Select theme"

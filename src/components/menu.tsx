@@ -12,7 +12,7 @@ export interface MenuItem {
 }
 
 interface MenuProps {
-  label: string;
+  label?: string;
   items: MenuItem[];
   activeValue?: string;
   ariaLabel: string;
@@ -110,9 +110,12 @@ export default function Menu({
         aria-controls={open ? menuId : undefined}
         onClick={() => setOpen((value) => !value)}
         className={triggerClass}
+        aria-label={label === undefined ? ariaLabel : undefined}
       >
         {triggerIcon}
-        <span className="max-w-[8.5rem] truncate sm:max-w-none">{label}</span>
+        {label !== undefined && (
+          <span className="max-w-[8.5rem] truncate sm:max-w-none">{label}</span>
+        )}
         <ChevronDown
           aria-hidden
           className={`size-4 text-muted-foreground transition-transform duration-150 ${open ? "rotate-180" : ""}`}

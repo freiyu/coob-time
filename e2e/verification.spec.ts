@@ -320,14 +320,14 @@ console.log("=== L. inspection WCA flow ===");
 
 console.log("=== M. theme ===");
 {
-  await page.getByRole("button", { name: /^(Dark|Light|System)$/, exact: true }).click();
+  await page.getByRole("button", { name: "Select theme", exact: true }).click();
   await page.getByRole("menuitem", { name: "Dark", exact: true }).click();
   check("dark applied", await page.evaluate(() => document.documentElement.classList.contains("dark")));
   await page.reload();
   await page.locator("h1").waitFor();
   await page.waitForFunction(() => document.documentElement.classList.contains("dark"), undefined, { timeout: 10000 }).catch(() => {});
   check("dark persists after reload", await page.evaluate(() => document.documentElement.classList.contains("dark")));
-  await page.getByRole("button", { name: "Dark", exact: true }).click();
+  await page.getByRole("button", { name: "Select theme", exact: true }).click();
   await page.getByRole("menuitem", { name: "System", exact: true }).click();
   await page.waitForTimeout(200);
   check("system light clears dark", !(await page.evaluate(() => document.documentElement.classList.contains("dark"))));
@@ -340,6 +340,16 @@ console.log("=== N. responsive quick ===");
   const m = await page.evaluate(() => ({ sh: document.documentElement.scrollHeight, ch: document.documentElement.clientHeight, sw: document.documentElement.scrollWidth }));
   check("mobile scrolls", m.sh > m.ch + 20, JSON.stringify(m));
   check("mobile no h-overflow", m.sw <= 391, m.sw);
+  const hdr = await page.evaluate(() => {
+    const bar = Array.from(document.querySelectorAll("header")).find((h) =>
+      h.querySelector('button[aria-label="Select theme"]'),
+    );
+    if (!bar) return { n: -1, tops: [] };
+    const hs = Array.from(bar.querySelectorAll("button"));
+    const tops = Array.from(new Set(hs.map((b) => Math.round(b.getBoundingClientRect().top))));
+    return { n: hs.length, tops };
+  });
+  check("mobile header one row (session/theme/gear/help)", hdr.n === 4 && hdr.tops.length === 1, JSON.stringify(hdr));
   await page.setViewportSize({ width: 1280, height: 720 });
   await page.waitForTimeout(500);
   const m2 = await page.evaluate(() => ({ sh: document.documentElement.scrollHeight, ch: document.documentElement.clientHeight }));

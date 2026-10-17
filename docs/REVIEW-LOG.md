@@ -114,3 +114,8 @@ Only the human supplies scores, satisfaction, bug notes, and the decision. Nobod
 - Bug notes and requested revisions: (none listed). No revisions requested. AUDIT minor findings resolved: README touch-controls line added @02bf3f0; approval-record commit ends with the required closing line. Phase 8 approved, MVP complete.
 - Prompt used: PRD Section 14 Phase 8 prompt + PRD §12 items 1–9
 - Human decision: Approve — 2026-10-16, quote: "oke sip selamat kamu udh selesai membuat aplikasi ini, ada yang ingin kamu sampaikan?" (treated as Phase 8 approval + MVP completion). HEAD 02bf3f0 at recording time; tag `phase-8-approved` created @dbe570b afterwards (tag-creation is the builder/owner's job, per AGENTS.md). All 8 phases approved.
+
+### Post-MVP revision — mobile top bar + puzzle selector — 2026-10-17
+- Human request: mobile top bar stacked; session/settings/help should sit in one row, and puzzle type should be a dropdown inside the scramble panel replacing the plain label text. (Theme: stays top-bar, icon-only.) Docs kept to this one block per request.
+- Changes: top-bar.tsx (puzzle Menu removed; theme trigger icon-only — Menu label now optional with trigger aria-label; brand h1 `sr-only sm:not-sr-only` below 640px; right cluster nowrap, session truncates first), scramble-panel.tsx (puzzle Menu replaces the h2 label; +onPuzzleChange/+selectionLocked), menu.tsx (optional label), timer-app.tsx rewiring; e2e verification.spec: section M theme selector → "Select theme", section N new check "mobile header one row" scoped to the top-bar header.
+- Verified (builder-observed 2026-10-17): lint ✓, typecheck ✓, vitest 63/63, playwright 5/5 (incl. new one-row check), next build exit 0, screenshots at 390px/1280px eyeballed. Not pushed — human pushes.

@@ -548,8 +548,6 @@ export default function TimerApp() {
         inert={focused}
       >
         <TopBar
-          puzzleId={puzzleId}
-          onPuzzleChange={handlePuzzleChange}
           sessions={[
             ...(sessions.some(
               (candidate) =>
@@ -638,6 +636,8 @@ export default function TimerApp() {
                 (phase !== "idle" && phase !== "stopped")
               }
               onNewScramble={handleNewScramble}
+              onPuzzleChange={handlePuzzleChange}
+              selectionLocked={phase !== "idle" && phase !== "stopped"}
             />
           </div>
         </div>

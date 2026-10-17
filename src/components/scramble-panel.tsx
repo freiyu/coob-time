@@ -3,8 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Check, Copy, RefreshCw } from "lucide-react";
 import Dialog from "@/components/dialog";
+import Menu, { type MenuItem } from "@/components/menu";
 import ScrambleView from "@/components/scramble-view";
-import type { PuzzleId } from "@/lib/puzzles";
+import { PUZZLES, type Puzzle, type PuzzleId } from "@/lib/puzzles";
 
 interface ScramblePanelProps {
   puzzleId: PuzzleId;
@@ -14,6 +15,8 @@ interface ScramblePanelProps {
   error?: string;
   newScrambleDisabled: boolean;
   onNewScramble: () => void;
+  onPuzzleChange: (puzzleId: PuzzleId) => void;
+  selectionLocked: boolean;
 }
 
 export default function ScramblePanel({
@@ -24,6 +27,8 @@ export default function ScramblePanel({
   error,
   newScrambleDisabled,
   onNewScramble,
+  onPuzzleChange,
+  selectionLocked,
 }: ScramblePanelProps) {
   const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">(
     "idle",
@@ -54,6 +59,13 @@ export default function ScramblePanel({
     scramble !== "" &&
     (puzzleId === "6x6" || puzzleId === "7x7" || scramble.split("\n").length > 3);
 
+  const puzzleItems: MenuItem[] = PUZZLES.map((puzzle: Puzzle) => ({
+    label: puzzle.label,
+    value: puzzle.id,
+    disabled: selectionLocked && puzzle.id !== puzzleId,
+    onSelect: () => onPuzzleChange(puzzle.id),
+  }));
+
   return (
     <section
       aria-label="Scramble"
@@ -61,7 +73,12 @@ export default function ScramblePanel({
     >
       <header className="flex flex-wrap items-center gap-3">
         <div className="flex flex-1 flex-wrap items-center gap-2">
-          <h2 className="text-sm font-semibold">{puzzleLabel}</h2>
+          <Menu
+            label={puzzleLabel}
+            items={puzzleItems}
+            activeValue={puzzleId}
+            ariaLabel="Select puzzle"
+          />
           {status === "generating" && (
             <span
               role="status"

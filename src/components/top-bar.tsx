@@ -107,7 +107,7 @@ export default function TopBar({
       <header className="border-b border-border">
       <div className="mx-auto flex w-full max-w-6xl items-center gap-3 px-4 py-3 sm:px-6">
         <div className="flex min-w-0 flex-1 items-center gap-2">
-          <Box aria-hidden className="hidden size-5 text-brand-strong sm:block" />
+          <Box aria-hidden className="size-5 shrink-0 text-brand-strong" />
           <h1 className="sr-only text-base font-semibold sm:not-sr-only sm:truncate">
             CubeTime
           </h1>

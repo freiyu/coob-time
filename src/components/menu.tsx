@@ -114,7 +114,7 @@ export default function Menu({
       >
         {triggerIcon}
         {label !== undefined && (
-          <span className="max-w-[8.5rem] truncate sm:max-w-none">{label}</span>
+          <span className="max-w-[7rem] truncate sm:max-w-none">{label}</span>
         )}
         <ChevronDown
           aria-hidden

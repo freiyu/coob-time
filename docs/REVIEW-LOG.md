@@ -119,3 +119,8 @@ Only the human supplies scores, satisfaction, bug notes, and the decision. Nobod
 - Human request: mobile top bar stacked; session/settings/help should sit in one row, and puzzle type should be a dropdown inside the scramble panel replacing the plain label text. (Theme: stays top-bar, icon-only.) Docs kept to this one block per request.
 - Changes: top-bar.tsx (puzzle Menu removed; theme trigger icon-only — Menu label now optional with trigger aria-label; brand h1 `sr-only sm:not-sr-only` below 640px; right cluster nowrap, session truncates first), scramble-panel.tsx (puzzle Menu replaces the h2 label; +onPuzzleChange/+selectionLocked), menu.tsx (optional label), timer-app.tsx rewiring; e2e verification.spec: section M theme selector → "Select theme", section N new check "mobile header one row" scoped to the top-bar header.
 - Verified (builder-observed 2026-10-17): lint ✓, typecheck ✓, vitest 63/63, playwright 5/5 (incl. new one-row check), next build exit 0, screenshots at 390px/1280px eyeballed. Not pushed — human pushes.
+
+### Post-MVP revision 2 — mobile brand logo — 2026-10-17
+- Human request: on mobile the CubeTime logo disappeared; show the logo icon without the brand text on mobile (text stays desktop-only). Follow-up to the top-bar revision above.
+- Changes: top-bar.tsx — Box logo always visible (`shrink-0`), h1 stays `sr-only sm:not-sr-only`; menu.tsx — label span cap `8.5rem` → `7rem` on mobile so a long session name can never overlap the logo.
+- Verified: lint ✓, typecheck ✓, playwright 5/5, screenshots 390px/1280px eyeballed. Not pushed — human pushes.
